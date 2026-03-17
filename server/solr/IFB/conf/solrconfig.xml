@@ -794,7 +794,7 @@
       <!-- MULTIPLICATIVE BOOST using boost function -->
       <!-- This multiplies scores instead of adding, so high-relevance accessories can still win -->
       <!-- Main products get 1.3x multiplier, accessories get 1x (no boost) -->
-      <str name="boost">if(termfreq(productParentCategory,'Laundry Solutions'),1.3,if(termfreq(productParentCategory,'Kitchen Solutions'),1.3,if(termfreq(productParentCategory,'Living Solutions'),1.3,1)))</str>
+      <str name="boost">if(termfreq(productType,'Products'),1.3,1)</str>
       
       <!-- Accessories and Essentials rank based on query relevance -->
       

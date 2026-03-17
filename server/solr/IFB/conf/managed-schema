@@ -586,7 +586,9 @@
   <field name="_version_" type="plong" indexed="false" stored="false"/>
   <field name="add" type="text_general"/>
   <field name="author" type="text_general"/>
-  <field name="contentType" type="string" indexed="true" stored="true" docValues="true"/>
+  <field name="contentType" type="string" indexed="true" stored="true"/>
+  <field name="productType" type="string" indexed="true" stored="true"/>
+  <field name="productSegment" type="string" indexed="true" stored="true"/>
   <field name="delete" type="text_general"/>
   <field name="extra" type="text_general_singleval" indexed="true" stored="true"/>
   <field name="id" type="string" multiValued="false" indexed="true" required="true" stored="true"/>
