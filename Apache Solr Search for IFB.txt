@@ -1,0 +1,1764 @@
+﻿In an AEM Sites (Cloud Service) + Adobe Commerce (PaaS) + Apache Solr architecture like IFB Appliances, wrong search results typically come from poor indexing strategy, weak schema design, improper analyzers, or missing contextual signals (category, intent, synonyms, canonicalization).
+Below is a structured best-practice guide tailored to a multi-category brand like IFB Appliances.
+________________
+
+
+1️⃣ First: Define the Search Architecture Clearly
+Before tuning Solr, confirm:
+* Is Solr indexing from Adobe Commerce only, or from both AEM + Commerce?
+* Is AEM querying Solr directly, or via a middleware layer?
+* Are CMS pages (blogs, service pages, support) indexed in the same core as products?
+Best Practice
+👉 Use separate cores/collections:
+* products_core
+* cms_core
+* support_core
+Then implement federated search logic at AEM layer.
+Why?
+Mixing dishwashers with blog articles in one ranking model causes relevance confusion.
+________________
+
+
+2️⃣ Schema Design Best Practices (Most Critical)
+For a brand like IFB (washing machines, ACs, modular kitchens, additives etc.), schema design determines contextual relevance.
+A. Use Explicit Field Strategy (Not Catch-All)
+Avoid indexing everything into one text field.
+Instead define:
+product_name (text_en)
+sku (string)
+category (string)
+sub_category (string)
+brand (string)
+series (string)
+capacity (float)
+color (string)
+price (float)
+description (text_en)
+features (text_en)
+intent_tags (string multivalued)
+url (string)
+canonical_url (string)
+is_product (boolean)
+
+________________
+B. Boost Critical Fields
+In solrconfig.xml:
+qf=product_name^8 category^5 features^3 description^2
+Example:
+If user searches "8kg washing machine"
+* capacity should match numerically
+* category = washing machine boosted
+* product_name highest boost
+Without boosting, Solr ranks random text matches.
+________________
+
+
+C. Use Multi-Valued Fields for Facets
+For IFB:
+energy_rating
+installation_type
+capacity_range
+inverter_type
+Faceting should not affect ranking, but improves UX filtering.
+________________
+
+
+3️⃣ Analyzer & Tokenization Configuration
+IFB products contain:
+* Numbers (8kg, 1.5 ton)
+* Hyphenated models (IFB-Diva-SX)
+* Acronyms (AC, MWO)
+Use:
+For text fields:
+StandardTokenizer
+LowerCaseFilter
+StopFilter
+SynonymFilter
+WordDelimiterGraphFilter
+Critical: WordDelimiterGraphFilter
+It allows:
+* "1.5ton" → "1", "5", "ton"
+* "8kg" → "8", "kg"
+* "IFB-Diva-SX" → IFB, Diva, SX
+Without this, model search fails.
+________________
+
+
+4️⃣ Synonym Strategy (Extremely Important for Appliances)
+Create domain synonym file:
+wm => washing machine
+ac => air conditioner
+mwo => microwave oven
+dw => dishwasher
+front load => fl
+top load => tl
+For India-specific usage:
+washing powder => detergent
+Synonyms must be:
+* Index-time OR query-time
+* Query-time preferred (easier updates)
+________________
+
+
+5️⃣ Contextual Search (Intent-Based)
+Problem:
+User searches “leakage issue” and sees washing machine products.
+Solution: Intent Tagging
+Add metadata:
+intent_tags:
+  - buy
+  - repair
+  - installation
+  - accessories
+Then:
+* If search term contains “service”, boost support core
+* If “price”, boost product core
+* If “manual”, boost support core
+This logic should be implemented in AEM before querying Solr.
+________________
+
+
+6️⃣ Category-Aware Search (Huge Impact)
+IFB has unrelated categories:
+* Modular kitchen
+* Washing machine
+* AC
+When user navigates inside AC category, search should be contextual.
+Best Practice:
+Pass fq=category:AC filter when user is inside AC PLP.
+This prevents dishwasher results when searching "1.5 ton".
+________________
+
+
+7️⃣ Canonical URL Strategy
+Solr should index only canonical product URLs.
+Example:
+Bad:
+/product?id=123
+/washing-machines/front-load?id=123
+Good:
+/washing-machines/front-load/ifb-diva-sx-8kg
+Implementation Best Practice
+* Adobe Commerce should define canonical product URL
+* AEM must fetch and store canonical_url field
+* Solr indexes only canonical_url
+* Use canonical URL as uniqueKey
+In schema.xml:
+<uniqueKey>canonical_url</uniqueKey>
+This prevents duplicate result ranking issues.
+________________
+
+
+8️⃣ Commerce → Solr Data Sync Best Practices
+Never index incomplete product data.
+Ensure:
+* All attributes normalized
+* Category hierarchy flattened
+* Clean HTML stripped from description
+* Units standardized (kg, ton, L)
+Bad Data = Bad Search.
+________________
+
+
+9️⃣ Boosting Based on Business Signals
+For IFB:
+Boost:
+* In-stock products
+* New launches
+* Best sellers
+Example:
+bf=recip(ms(NOW,publish_date),3.16e-11,1,1)^2
+Or simple:
+in_stock:true^5
+
+________________
+🔟 Handling Numeric & Range Queries Properly
+User searches:
+* “8kg washing machine”
+* “1.5 ton inverter ac under 40000”
+You must:
+* Map numeric tokens to numeric fields
+* Parse price filters
+* Use Solr Range Query
+Example:
+capacity:[7 TO 9]
+price:[* TO 40000]
+This requires AEM-side query preprocessing.
+________________
+
+
+1️⃣1️⃣ Use Learning-to-Rank (If Enterprise-Scale)
+For large catalog:
+* Implement Solr LTR
+* Train model using click-through data
+* Re-rank top 50 results
+This significantly improves contextual accuracy.
+________________
+
+
+1️⃣2️⃣ Debugging Wrong Results Checklist
+If search returns wrong products:
+✔ Check analyzer output
+✔ Check field boosts
+✔ Verify category filter
+✔ Check if description has noisy HTML
+✔ Confirm synonyms
+✔ Validate numeric parsing
+✔ Inspect query debug (debugQuery=true)
+________________
+
+
+1️⃣3️⃣ AEM Layer Responsibilities
+AEM should:
+* Detect user persona
+* Pass category filter
+* Add boost parameters
+* Query multiple cores if needed
+* Merge results intelligently
+Solr alone cannot solve intent.
+________________
+
+
+1️⃣4️⃣ Ideal Final Architecture for IFB
+Adobe Commerce → Product Feed → Solr (products_core)
+AEM CMS → Solr (cms_core)
+AEM UI → Intent Processor → Solr Query Builder
+Solr → Ranked Results → AEM → UI
+
+________________
+🚨 Most Common Mistakes in This Setup
+* Single generic text field
+* No field boosting
+* No synonyms
+* No category filtering
+* Duplicate URLs indexed
+* Mixing CMS & product ranking logic
+* Not normalizing units
+________________
+
+
+🎯 If You Want Immediate Improvement
+1. Add field boosts
+2. Add synonym file
+3. Enable WordDelimiterGraphFilter
+4. Filter by category context
+5. Use canonical_url as uniqueKey
+6. Separate product & CMS cores
+________________
+
+
+If you’d like, I can next provide:
+* A sample Solr schema.xml optimized for appliance ecommerce
+* A sample solrconfig.xml boosting configuration
+* Or a query debugging walkthrough for your current issue
+
+
+A sample Solr schema.xml optimized for appliance ecommerce
+
+
+Below is a sample Apache Solr schema.xml optimized for an appliance e-commerce setup like IFB Appliances (washing machines, ACs, microwave ovens, dishwashers, modular kitchen, additives, etc.).
+This schema is designed for:
+* Strong product-name relevance
+* Proper numeric handling (8kg, 1.5 ton, price filters)
+* Category-aware search
+* Faceting support
+* Synonym-ready configuration
+* Canonical URL-based uniqueness
+* Commerce + AEM compatible architecture
+________________
+
+
+✅ Design Principles Used
+* Explicit field modeling (no catch-all only indexing)
+* Boost-friendly text fields
+* Numeric fields for range queries
+* Facet-optimized string fields
+* Query-time synonyms
+* Word delimiter for model numbers
+* Canonical URL as uniqueKey
+________________
+
+
+📄 Sample schema.xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<schema name="appliance-ecommerce" version="1.6">
+
+
+  <!-- ========================= -->
+  <!-- Unique Identifier -->
+  <!-- ========================= -->
+  <uniqueKey>canonical_url</uniqueKey>
+
+
+  <!-- ========================= -->
+  <!-- Field Types -->
+  <!-- ========================= -->
+
+
+  <!-- Text with search analysis -->
+  <fieldType name="text_en" class="solr.TextField" positionIncrementGap="100">
+    <analyzer type="index">
+      <tokenizer class="solr.StandardTokenizerFactory"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+      <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+      <filter class="solr.WordDelimiterGraphFilterFactory"
+              generateWordParts="1"
+              generateNumberParts="1"
+              splitOnCaseChange="1"
+              preserveOriginal="1"/>
+      <filter class="solr.SynonymGraphFilterFactory"
+              synonyms="synonyms.txt"
+              expand="true"
+              ignoreCase="true"/>
+    </analyzer>
+
+
+    <analyzer type="query">
+      <tokenizer class="solr.StandardTokenizerFactory"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+      <filter class="solr.SynonymGraphFilterFactory"
+              synonyms="synonyms.txt"
+              expand="true"
+              ignoreCase="true"/>
+      <filter class="solr.WordDelimiterGraphFilterFactory"
+              generateWordParts="1"
+              generateNumberParts="1"
+              preserveOriginal="1"/>
+    </analyzer>
+  </fieldType>
+
+
+  <!-- Exact string (facets, filters, sorting) -->
+  <fieldType name="string" class="solr.StrField" sortMissingLast="true"/>
+
+
+  <!-- Boolean -->
+  <fieldType name="boolean" class="solr.BoolField"/>
+
+
+  <!-- Numeric fields -->
+  <fieldType name="pfloat" class="solr.FloatPointField"/>
+  <fieldType name="pdouble" class="solr.DoublePointField"/>
+  <fieldType name="pint" class="solr.IntPointField"/>
+  <fieldType name="plong" class="solr.LongPointField"/>
+
+
+  <!-- Date -->
+  <fieldType name="pdate" class="solr.DatePointField"/>
+
+
+  <!-- ========================= -->
+  <!-- Product Core Fields -->
+  <!-- ========================= -->
+
+
+  <!-- Identity -->
+  <field name="sku" type="string" indexed="true" stored="true"/>
+  <field name="product_id" type="string" indexed="true" stored="true"/>
+  <field name="canonical_url" type="string" indexed="true" stored="true"/>
+
+
+  <!-- Core Search Fields -->
+  <field name="product_name" type="text_en" indexed="true" stored="true"/>
+  <field name="short_description" type="text_en" indexed="true" stored="true"/>
+  <field name="long_description" type="text_en" indexed="true" stored="false"/>
+  <field name="features" type="text_en" indexed="true" stored="false"/>
+
+
+  <!-- Catch-all searchable field -->
+  <field name="text" type="text_en" indexed="true" stored="false" multiValued="true"/>
+
+
+  <!-- Category Structure -->
+  <field name="category" type="string" indexed="true" stored="true" multiValued="true"/>
+  <field name="sub_category" type="string" indexed="true" stored="true" multiValued="true"/>
+  <field name="category_path" type="string" indexed="true" stored="true"/>
+
+
+  <!-- Brand & Series -->
+  <field name="brand" type="string" indexed="true" stored="true"/>
+  <field name="series" type="string" indexed="true" stored="true"/>
+
+
+  <!-- Appliance-Specific Attributes -->
+  <field name="capacity_kg" type="pfloat" indexed="true" stored="true"/>
+  <field name="capacity_litre" type="pfloat" indexed="true" stored="true"/>
+  <field name="cooling_ton" type="pfloat" indexed="true" stored="true"/>
+  <field name="power_watt" type="pint" indexed="true" stored="true"/>
+  <field name="energy_rating" type="string" indexed="true" stored="true"/>
+  <field name="color" type="string" indexed="true" stored="true" multiValued="true"/>
+  <field name="installation_type" type="string" indexed="true" stored="true"/>
+
+
+  <!-- Pricing -->
+  <field name="price" type="pdouble" indexed="true" stored="true"/>
+  <field name="mrp" type="pdouble" indexed="true" stored="true"/>
+  <field name="discount_percent" type="pfloat" indexed="true" stored="true"/>
+
+
+  <!-- Inventory -->
+  <field name="in_stock" type="boolean" indexed="true" stored="true"/>
+  <field name="stock_qty" type="pint" indexed="true" stored="false"/>
+
+
+  <!-- Business Signals -->
+  <field name="is_new_launch" type="boolean" indexed="true" stored="true"/>
+  <field name="is_best_seller" type="boolean" indexed="true" stored="true"/>
+  <field name="rating" type="pfloat" indexed="true" stored="true"/>
+  <field name="review_count" type="pint" indexed="true" stored="true"/>
+
+
+  <!-- Intent Tagging -->
+  <field name="intent_tags" type="string" indexed="true" stored="true" multiValued="true"/>
+
+
+  <!-- SEO -->
+  <field name="meta_title" type="text_en" indexed="true" stored="false"/>
+  <field name="meta_keywords" type="text_en" indexed="true" stored="false"/>
+
+
+  <!-- Publish Date -->
+  <field name="publish_date" type="pdate" indexed="true" stored="true"/>
+
+
+  <!-- ========================= -->
+  <!-- Copy Fields -->
+  <!-- ========================= -->
+
+
+  <!-- Build unified searchable field -->
+  <copyField source="product_name" dest="text"/>
+  <copyField source="short_description" dest="text"/>
+  <copyField source="long_description" dest="text"/>
+  <copyField source="features" dest="text"/>
+  <copyField source="meta_keywords" dest="text"/>
+
+
+</schema>
+
+________________
+🧠 Why This Works for Appliance Ecommerce
+✔ Handles numeric queries
+* “8kg washing machine”
+* “1.5 ton inverter AC”
+* “microwave 25L”
+Because capacity fields are numeric (FloatPointField).
+________________
+
+
+✔ Proper model matching
+WordDelimiterGraphFilter ensures:
+* IFB-Diva-SX → IFB, Diva, SX
+* 1.5ton → 1, 5, ton
+________________
+
+
+✔ Facet Ready
+All category & filterable attributes use string type for fast faceting.
+________________
+
+
+✔ Canonical URL Safety
+<uniqueKey>canonical_url</uniqueKey>
+Prevents duplicate ranking from parameterized URLs.
+________________
+
+
+✔ Intent-Aware Capability
+intent_tags supports boosting:
+* repair
+* buy
+* manual
+* accessories
+________________
+
+
+🚀 Recommended Query Boost Example (solrconfig)
+qf=product_name^10 category^6 features^4 text^2
+bf=recip(ms(NOW,publish_date),3.16e-11,1,1)^2
+bq=in_stock:true^5
+bq=is_best_seller:true^3
+
+________________
+🔥 Optional Advanced Enhancements
+For large catalogs:
+* Add EdgeNGram field for autocomplete
+* Implement Learning-To-Rank
+* Separate CMS core
+* Add regional pricing fields
+* Implement spellcheck component
+________________
+
+
+If you'd like, I can next provide:
+* 🔍 Sample solrconfig.xml tuned for relevance
+* ⚙ Sample autocomplete configuration
+* 📊 Query debugging method for incorrect results
+* 🧠 Intent-based ranking strategy for appliance search
+
+
+Below is a sample solrconfig.xml tuned for relevance for an appliance e-commerce setup (AEM Sites + Adobe Commerce + Apache Solr), optimized for multi-category products like those from IFB Appliances.
+This configuration focuses on:
+* Strong product-name boosting
+* Category-aware ranking
+* Business signal boosting (in-stock, best-seller, new launch)
+* Query-time synonyms
+* Numeric relevance handling
+* Faceting
+* Spellcheck
+* Autocomplete support
+* Debug capability
+________________
+
+
+📄 Sample solrconfig.xml (Relevance Optimized)
+<?xml version="1.0" encoding="UTF-8" ?>
+<config>
+
+
+  <!-- ============================= -->
+  <!-- Request Handler for Main Search -->
+  <!-- ============================= -->
+  <requestHandler name="/select" class="solr.SearchHandler">
+    <lst name="defaults">
+
+
+      <!-- Use Extended DisMax -->
+      <str name="defType">edismax</str>
+
+
+      <!-- Query Fields with Boosts -->
+      <str name="qf">
+        product_name^12
+        category^8
+        sub_category^6
+        features^4
+        short_description^3
+        text^2
+      </str>
+
+
+      <!-- Phrase Boosting -->
+      <str name="pf">
+        product_name^20
+        category^10
+      </str>
+
+
+      <!-- Minimum match -->
+      <str name="mm">2&lt;-1 5&lt;-2</str>
+
+
+      <!-- Boost functions -->
+      <str name="bf">
+        recip(ms(NOW,publish_date),3.16e-11,1,1)^2
+        rating^1.5
+      </str>
+
+
+      <!-- Boost Queries -->
+      <str name="bq">
+        in_stock:true^8
+        is_best_seller:true^5
+        is_new_launch:true^3
+      </str>
+
+
+      <!-- Tie breaker -->
+      <str name="tie">0.1</str>
+
+
+      <!-- Default rows -->
+      <int name="rows">20</int>
+
+
+      <!-- Enable debugging when needed -->
+      <str name="debugQuery">false</str>
+
+
+    </lst>
+  </requestHandler>
+
+
+
+
+  <!-- ============================= -->
+  <!-- Faceting Configuration -->
+  <!-- ============================= -->
+  <requestHandler name="/facet" class="solr.SearchHandler">
+    <lst name="defaults">
+      <str name="facet">true</str>
+      <str name="facet.field">category</str>
+      <str name="facet.field">brand</str>
+      <str name="facet.field">energy_rating</str>
+      <str name="facet.field">color</str>
+      <str name="facet.mincount">1</str>
+      <str name="facet.limit">20</str>
+    </lst>
+  </requestHandler>
+
+
+
+
+  <!-- ============================= -->
+  <!-- Autocomplete / Suggest Component -->
+  <!-- ============================= -->
+  <searchComponent name="suggest" class="solr.SuggestComponent">
+    <lst name="suggester">
+      <str name="name">productSuggester</str>
+      <str name="lookupImpl">AnalyzingInfixLookupFactory</str>
+      <str name="dictionaryImpl">DocumentDictionaryFactory</str>
+      <str name="field">product_name</str>
+      <str name="suggestAnalyzerFieldType">text_en</str>
+      <str name="buildOnStartup">true</str>
+      <str name="buildOnCommit">true</str>
+    </lst>
+  </searchComponent>
+
+
+  <requestHandler name="/suggest" class="solr.SearchHandler">
+    <lst name="defaults">
+      <str name="suggest">true</str>
+      <str name="suggest.dictionary">productSuggester</str>
+      <str name="suggest.count">10</str>
+    </lst>
+    <arr name="components">
+      <str>suggest</str>
+    </arr>
+  </requestHandler>
+
+
+
+
+  <!-- ============================= -->
+  <!-- Spellcheck Configuration -->
+  <!-- ============================= -->
+  <searchComponent name="spellcheck" class="solr.SpellCheckComponent">
+    <lst name="spellchecker">
+      <str name="name">default</str>
+      <str name="field">text</str>
+      <str name="classname">solr.DirectSolrSpellChecker</str>
+      <float name="accuracy">0.7</float>
+      <int name="maxEdits">2</int>
+      <int name="minPrefix">1</int>
+    </lst>
+  </searchComponent>
+
+
+  <requestHandler name="/spell" class="solr.SearchHandler">
+    <lst name="defaults">
+      <str name="spellcheck">true</str>
+      <str name="spellcheck.dictionary">default</str>
+      <str name="spellcheck.count">5</str>
+      <str name="spellcheck.extendedResults">true</str>
+    </lst>
+    <arr name="components">
+      <str>spellcheck</str>
+    </arr>
+  </requestHandler>
+
+
+
+
+  <!-- ============================= -->
+  <!-- Caching (Important for Ecommerce) -->
+  <!-- ============================= -->
+  <query>
+    <filterCache class="solr.FastLRUCache"
+                 size="512"
+                 initialSize="512"
+                 autowarmCount="128"/>
+
+
+    <queryResultCache class="solr.LRUCache"
+                      size="512"
+                      initialSize="512"
+                      autowarmCount="128"/>
+
+
+    <documentCache class="solr.LRUCache"
+                   size="1024"
+                   initialSize="1024"
+                   autowarmCount="256"/>
+  </query>
+
+
+</config>
+
+________________
+🎯 Why This Configuration Improves Relevance
+1️⃣ Strong Field Boosting
+Product name gets highest weight:
+product_name^12
+So searching:
+“8kg front load washing machine”
+Will rank matching product titles highest.
+________________
+
+
+2️⃣ Phrase Boosting
+If user types exact phrase:
+"1.5 ton inverter ac"
+pf ensures exact phrase in product_name ranks top.
+________________
+
+
+3️⃣ Business Boosting
+In-stock products rank above out-of-stock:
+in_stock:true^8
+Best sellers & new launches are promoted naturally.
+________________
+
+
+4️⃣ Recency Boost
+New launches get subtle ranking lift:
+recip(ms(NOW,publish_date))
+
+________________
+5️⃣ Spellcheck for Indian Market Typos
+Handles:
+* “washng machine”
+* “microvawe”
+* “diswasher”
+________________
+
+
+6️⃣ Autocomplete with Infix Matching
+Allows:
+* Typing “diva” → finds “IFB Diva SX 8kg”
+* Typing “8kg” → shows matching models
+________________
+
+
+🧠 Very Important for AEM Integration
+AEM must dynamically pass:
+fq=category:WashingMachine
+when user is browsing inside category page.
+Without category filtering, cross-category pollution occurs.
+________________
+
+
+🚨 If You're Getting Wrong Results Now
+Most likely causes:
+* No proper qf boosting
+* No phrase boosting
+* No category filter
+* Numeric tokens treated as text
+* No synonym file
+* Using dismax instead of edismax
+________________
+
+
+🚀 If You Want Next-Level Relevance
+Next steps:
+* Implement Learning-To-Rank (LTR)
+* Add click-based re-ranking
+* Add intent detection in AEM
+* Use category-aware boosting
+* Add dynamic query rewriting
+________________
+
+
+If you’d like, I can next provide:
+* 🔍 A real-world query debugging walkthrough
+* 🧠 Intent-based ranking logic for appliances
+* ⚙ AEM → Solr query builder best practice
+* 📊 Example of fixing a wrong-result scenario step-by-step
+
+
+
+
+Great question — this is exactly where most appliance search implementations fail.
+When I said “Intent Tagging logic should be implemented in AEM before querying Solr”, I meant:
+👉 Solr is a ranking engine.
+👉 Intent detection is an experience-layer responsibility.
+👉 AEM should interpret what the user wants before building the Solr query.
+Below is a clear, production-ready approach for implementing Intent Tagging in AEM (Cloud Service) for an appliance ecommerce setup like IFB.
+________________
+
+
+🎯 Step 1: Define Intent Taxonomy (Business Exercise First)
+For an appliance brand like IFB, typical intents are:
+Intent
+	Example Queries
+	buy
+	8kg washing machine, inverter ac price
+	repair
+	washing machine not draining
+	service
+	IFB service center near me
+	manual
+	microwave user manual
+	accessories
+	dishwasher tablets
+	compare
+	compare 8kg and 9kg
+	warranty
+	warranty registration
+	You must freeze this taxonomy before implementation.
+________________
+
+
+🎯 Step 2: Add intent_tags Field in Solr
+In your schema.xml:
+<field name="intent_tags" type="string" indexed="true" stored="true" multiValued="true"/>
+During indexing (from Adobe Commerce or AEM):
+Example product:
+{
+  "product_name": "IFB Diva SX 8kg Front Load Washing Machine",
+  "category": "Washing Machine",
+  "intent_tags": ["buy"]
+}
+Support article:
+{
+  "title": "Washing Machine Not Draining - Troubleshooting Guide",
+  "intent_tags": ["repair", "support"]
+}
+Accessory:
+{
+  "product_name": "IFB Dishwasher Cleaning Tablets",
+  "intent_tags": ["accessories", "buy"]
+}
+
+________________
+🎯 Step 3: Build Intent Detection in AEM (Critical Layer)
+This should NOT be done in Solr.
+In AEM (Sling Model / OSGi Service):
+1️⃣ Maintain Intent Dictionary (Configurable)
+Create an OSGi configuration:
+{
+  "buy": ["price", "cost", "buy", "purchase", "under"],
+  "repair": ["not working", "problem", "issue", "leak", "noise"],
+  "service": ["service center", "technician", "installation"],
+  "manual": ["manual", "pdf", "user guide"],
+  "accessories": ["tablet", "additive", "spare", "filter"]
+}
+This must be business-editable (via AEM config or Content Fragment).
+________________
+
+
+2️⃣ Detect Intent Before Calling Solr
+Pseudo logic in AEM:
+public String detectIntent(String query) {
+
+
+   if(query contains any service keywords)
+       return "service";
+
+
+   if(query contains numeric price pattern)
+       return "buy";
+
+
+   if(query contains problem keywords)
+       return "repair";
+
+
+   return "buy"; // default
+}
+You can also use:
+* Regex for price (under 40000)
+* Regex for capacity (8kg, 1.5 ton)
+________________
+
+
+🎯 Step 4: Modify Solr Query Based on Intent
+Instead of generic query:
+q=8kg washing machine
+AEM should build:
+If intent = buy
+q=8kg washing machine
+bq=intent_tags:buy^10
+fq=in_stock:true
+
+________________
+If intent = repair
+q=washing machine not draining
+bq=intent_tags:repair^15
+fq=intent_tags:support
+
+________________
+If intent = accessories
+q=dishwasher tablets
+bq=intent_tags:accessories^15
+
+________________
+🎯 Step 5: Core Switching (Advanced Best Practice)
+Even better:
+Instead of mixing everything in one core:
+Core
+	Content
+	products_core
+	Products
+	support_core
+	Troubleshooting
+	cms_core
+	Blogs
+	AEM decides:
+* If intent = repair → query support_core first
+* If intent = buy → query products_core
+* Merge intelligently
+This drastically improves contextual accuracy.
+________________
+
+
+🎯 Step 6: UI Behaviour Based on Intent
+Intent should also change UX:
+Intent
+	UX Change
+	buy
+	Show filters, price, compare
+	repair
+	Show troubleshooting articles first
+	service
+	Show service locator CTA
+	manual
+	Direct PDF result
+	Search is not just ranking — it's journey control.
+________________
+
+
+🎯 Step 7: Boosting Strategy Example
+Inside solrconfig.xml:
+<str name="bq">
+  intent_tags:buy^10
+</str>
+But this should be dynamically injected by AEM based on detected intent.
+________________
+
+
+🎯 Step 8: Optional — Machine Learning Based Intent
+If traffic is large:
+* Log search query
+* Log clicked result
+* Train simple classifier
+* Improve keyword dictionary
+For IFB-scale, rule-based works very well initially.
+________________
+
+
+🚨 What NOT To Do
+❌ Do not rely on Solr alone to detect intent
+❌ Do not mix repair articles and products without tagging
+❌ Do not hardcode boosting inside solrconfig
+Intent logic belongs to Experience Layer (AEM).
+________________
+
+
+🏗 Final Architecture Flow
+User Search → AEM
+     ↓
+Intent Detection Engine
+     ↓
+Build Contextual Solr Query
+     ↓
+Solr Returns Ranked Results
+     ↓
+AEM Controls Display Order
+
+________________
+🎯 Real Example
+User types:
+"washing machine leaking water"
+Without intent:
+Returns product list.
+With intent:
+* Detect "leaking"
+* intent = repair
+* Boost support content
+* Show troubleshooting first
+* Show “Book Service” CTA
+That’s contextual search.
+________________
+
+
+🔥 If You Want Next
+I can provide:
+* A production-ready AEM intent detection service design
+* Sample Solr query templates per intent
+* A wrong-result debugging walkthrough using your current scenario
+* A hybrid AI + rule-based approach for appliance ecommerce search
+Let me know your traffic scale and I can tailor the approach accordingly.
+Below are production-ready Solr query templates per intent designed for an AEM Sites + Adobe Commerce + Apache Solr architecture in an appliance ecommerce setup (washing machines, ACs, dishwashers, etc.).
+These templates assume:
+* defType=edismax
+* Proper field boosts already defined
+* intent_tags field exists
+* Category filters are passed dynamically from AEM
+* Separate cores are optional (shown in examples)
+________________
+
+
+🔎 1️⃣ BUY Intent (Transactional / Product Discovery)
+When to trigger:
+* Query contains capacity (8kg, 1.5 ton)
+* Contains price terms (under, below, price)
+* Generic product search
+________________
+
+
+🧾 Query Template (Products Core)
+/select?
+q=${user_query}
+&defType=edismax
+&qf=product_name^12 category^8 features^5 text^3
+&pf=product_name^20
+&mm=2<-1 5<-2
+&bq=intent_tags:buy^10
+&bq=in_stock:true^8
+&bq=is_best_seller:true^4
+&bf=recip(ms(NOW,publish_date),3.16e-11,1,1)^2
+&fq=category:${current_category}
+&rows=20
+
+________________
+💡 If user says:
+"8kg washing machine under 40000"
+AEM should additionally append:
+&fq=capacity_kg:[7 TO 9]
+&fq=price:[* TO 40000]
+
+________________
+🛠 2️⃣ REPAIR Intent (Problem / Troubleshooting)
+When to trigger:
+* "not working"
+* "leaking"
+* "noise"
+* "error code"
+________________
+
+
+🧾 Query Template (Support Core Preferred)
+/select?
+q=${user_query}
+&defType=edismax
+&qf=title^10 content^6 tags^5
+&pf=title^20
+&mm=2<-1
+&bq=intent_tags:repair^15
+&rows=15
+
+________________
+If using unified core:
+/select?
+q=${user_query}
+&defType=edismax
+&qf=product_name^6 content^8 text^4
+&bq=intent_tags:repair^15
+&fq=intent_tags:(repair OR support)
+
+________________
+UX Tip:
+If intent = repair:
+* Show troubleshooting first
+* Show “Book Service” CTA
+* Show related spare parts below
+________________
+
+
+🏢 3️⃣ SERVICE Intent (Technician / Installation / Service Center)
+Trigger Words:
+* service center
+* technician
+* installation
+* near me
+________________
+
+
+🧾 Query Template
+/select?
+q=${user_query}
+&defType=edismax
+&qf=service_title^12 location^8 text^4
+&bq=intent_tags:service^20
+&fq=intent_tags:service
+&rows=10
+
+________________
+If location detected:
+AEM should append:
+&fq=city:${user_city}
+Or geo query:
+&fq={!geofilt sfield=store_location pt=${lat},${lon} d=25}
+
+________________
+📘 4️⃣ MANUAL Intent (PDF / Documentation)
+Trigger Words:
+* manual
+* pdf
+* user guide
+* installation guide
+________________
+
+
+🧾 Query Template
+/select?
+q=${user_query}
+&defType=edismax
+&qf=title^15 product_name^8
+&bq=intent_tags:manual^20
+&fq=doc_type:manual
+&rows=10
+
+________________
+UX:
+* Direct PDF link
+* No product filters
+* No ecommerce elements
+________________
+
+
+🧴 5️⃣ ACCESSORIES Intent
+Trigger Words:
+* tablet
+* additive
+* spare part
+* filter
+________________
+
+
+🧾 Query Template
+/select?
+q=${user_query}
+&defType=edismax
+&qf=product_name^10 category^6 text^3
+&bq=intent_tags:accessories^15
+&fq=intent_tags:accessories
+&bq=in_stock:true^8
+&rows=20
+
+________________
+📊 6️⃣ COMPARE Intent
+Trigger Words:
+* compare
+* vs
+* difference between
+________________
+
+
+Strategy:
+AEM must:
+* Extract product models
+* Query individually
+* Return structured comparison
+________________
+
+
+Query Example:
+/select?
+q=product_name:("IFB Diva SX 8kg" OR "IFB Senator 9kg")
+&rows=2
+Comparison logic handled in AEM, not Solr.
+________________
+
+
+📝 7️⃣ WARRANTY Intent
+Trigger Words:
+* warranty
+* register warranty
+* check warranty
+________________
+
+
+Query Template
+/select?
+q=${user_query}
+&defType=edismax
+&qf=title^10 text^5
+&bq=intent_tags:warranty^20
+&fq=intent_tags:warranty
+&rows=10
+
+________________
+🧠 8️⃣ Hybrid Multi-Core Strategy (Best Practice)
+Instead of single-core boosting:
+AEM Flow:
+Detect Intent → Route Query
+    BUY → products_core
+    REPAIR → support_core
+    MANUAL → docs_core
+    SERVICE → stores_core
+Then merge if needed.
+________________
+
+
+🎯 Example End-to-End
+User searches:
+“microwave not heating”
+AEM:
+* Detect "not heating"
+* intent = repair
+* Query support_core
+Solr:
+Returns:
+* Troubleshooting article
+* Error code guide
+UI:
+* Show “Book Technician” CTA
+* Suggest related spare parts
+________________
+
+
+⚙ Recommended edismax Parameters
+Use in all templates:
+defType=edismax
+tie=0.1
+mm=2<-1 5<-2
+
+________________
+🚨 Most Important Rule
+Intent boost (bq=intent_tags:XYZ^N)
+must be dynamically injected by AEM.
+Do NOT hardcode in solrconfig.
+________________
+
+
+🏗 Recommended Query Builder Pattern in AEM
+Pseudo:
+Intent intent = detectIntent(query);
+
+
+switch(intent) {
+  case BUY:
+    applyBuyTemplate();
+    break;
+  case REPAIR:
+    applyRepairTemplate();
+    break;
+}
+
+________________
+🚀 If You Want Next
+I can provide:
+* 🔍 AEM Intent Detection Service (OSGi design sample)
+* 🧠 Query debugging walkthrough (why wrong results happen)
+* 📊 Solr LTR example for ecommerce
+* ⚙ Full multi-core architecture pattern
+* 🔎 Autocomplete + intent fusion strategy
+Tell me your catalog size and traffic level and I’ll tailor it precisely.
+________________
+
+
+In an AEM Sites (Cloud Service) + Adobe Commerce (PaaS) + Apache Solr setup, the key principle is:
+Adobe Commerce is your source of truth for product + category data.
+Solr is your optimized search index.
+So the question becomes:
+How do we reliably push structured Commerce catalog data into Solr?
+Below is a clear architectural recommendation, plus options depending on complexity and scale.
+________________
+
+
+🎯 First: Should You Use an Extension?
+Short answer:
+* ❌ There is no official Adobe Commerce extension for Solr
+* ⚠ Magento (Adobe Commerce) dropped native Solr support in favor of Elasticsearch/OpenSearch
+* ✅ Best practice is custom indexing pipeline, not a plug-and-play extension
+So you should not rely on marketplace extensions for enterprise search.
+________________
+
+
+🏗 Recommended Architecture (Enterprise-Safe)
+Adobe Commerce
+     ↓
+Catalog Export (API / Event / Cron)
+     ↓
+Middleware (Optional but Recommended)
+     ↓
+Transformation Layer
+     ↓
+Apache Solr (products_core collection)
+
+________________
+✅ Step-by-Step: Best Practice Implementation
+________________
+
+
+1️⃣ Create a Dedicated Solr Collection
+Example:
+products_core
+With:
+* Sharding if catalog > 100k SKUs
+* Replication if high traffic
+* Separate core from CMS content
+________________
+
+
+2️⃣ Decide How Data Flows from Adobe Commerce
+You have 3 viable options:
+________________
+
+
+OPTION A (Recommended for Enterprise):
+Event-Driven Indexing via Adobe Commerce Events
+Use:
+* catalog_product_save_after
+* catalog_category_save_after
+* inventory_stock_item_save_after
+Flow:
+Product Updated in Commerce
+        ↓
+Observer triggers
+        ↓
+Push JSON to Solr Update API
+Why This Is Best
+* Near real-time sync
+* No full reindex needed
+* Scales better
+* Cleaner architecture
+________________
+
+
+OPTION B: Scheduled Batch Indexing (Cron-Based)
+Every 5–15 minutes:
+* Fetch updated products via REST API
+* Push to Solr
+Good for:
+* Medium catalogs (<50k SKUs)
+* Lower complexity environments
+Not ideal for real-time stock updates.
+________________
+
+
+OPTION C: Middleware (Best for Large Enterprises)
+Use:
+* Adobe App Builder
+* MuleSoft
+* Custom Node/Spring service
+Flow:
+Commerce → Webhook → Middleware → Solr
+Advantages:
+* Data normalization
+* Unit standardization
+* Intent tagging
+* Schema mapping
+* Retry handling
+* Logging
+This is the most scalable solution.
+________________
+
+
+3️⃣ What Data Should Be Indexed?
+For appliance ecommerce (washing machines, ACs etc.), index:
+________________
+
+
+Product Metadata
+sku
+product_name
+short_description
+long_description
+features
+brand
+series
+price
+mrp
+discount_percent
+in_stock
+stock_qty
+rating
+review_count
+publish_date
+
+________________
+Appliance-Specific Attributes
+capacity_kg
+cooling_ton
+capacity_litre
+energy_rating
+color
+installation_type
+power_watt
+
+________________
+Category Metadata
+IMPORTANT: Don’t only store category ID.
+Store:
+category_id
+category_name
+category_path
+category_level
+Example:
+Home > Washing Machines > Front Load
+Flatten this before sending to Solr.
+________________
+
+
+4️⃣ How to Handle Categories Properly
+Adobe Commerce stores category tree hierarchically.
+Before pushing to Solr:
+* Flatten hierarchy
+* Store full path
+* Store each level separately
+Example Solr document:
+{
+  "sku": "IFB-DIVA-SX",
+  "product_name": "IFB Diva SX 8kg Front Load Washing Machine",
+  "category": ["Washing Machines", "Front Load"],
+  "category_path": "Home/Washing Machines/Front Load",
+  "category_level_1": "Washing Machines",
+  "category_level_2": "Front Load"
+}
+This enables:
+* Category faceting
+* Contextual filtering
+* Breadcrumb-based boosting
+________________
+
+
+5️⃣ How to Push Data to Solr
+Use Solr JSON update API:
+POST /solr/products_core/update?commit=true
+Payload:
+[
+  {
+    "sku": "IFB-DIVA-SX",
+    "product_name": "IFB Diva SX 8kg Front Load Washing Machine",
+    "price": 38990,
+    "capacity_kg": 8,
+    "category": ["Washing Machines", "Front Load"],
+    "in_stock": true,
+    "intent_tags": ["buy"]
+  }
+]
+Use softCommit for performance.
+________________
+
+
+6️⃣ How to Handle Deletes
+When product is disabled in Commerce:
+Push:
+{
+  "delete": { "id": "canonical_url_or_sku" }
+}
+Never leave stale products in Solr.
+________________
+
+
+7️⃣ Should You Index Variants?
+For appliances:
+* Washing machines usually simple products
+* But ACs may have multiple variants
+Best practice:
+* Index only child SKUs (actual sellable units)
+* Or flatten variant attributes into parent
+Avoid duplicate ranking confusion.
+________________
+
+
+8️⃣ Canonical URL Strategy
+Very important.
+Use:
+canonical_url
+As uniqueKey in Solr.
+Fetch from:
+$product->getProductUrl()
+Do NOT index parameterized URLs.
+________________
+
+
+9️⃣ Should You Use GraphQL Instead of REST?
+Yes — recommended.
+Adobe Commerce GraphQL:
+* Better structured product data
+* Faster payload control
+* Easier attribute selection
+Better than dumping full REST payload.
+________________
+
+
+🔟 Performance Best Practices
+For large appliance catalogs:
+* Use soft commits
+* Avoid commit=true for every product
+* Use batch updates (100–500 docs per call)
+* Use SolrCloud if >100k SKUs
+* Enable auto-scaling if traffic heavy
+________________
+
+
+🚫 What NOT To Do
+❌ Don’t crawl AEM pages to build product index
+❌ Don’t index HTML instead of structured data
+❌ Don’t rely on marketplace Solr extensions
+❌ Don’t mix CMS and product content in one collection
+❌ Don’t skip stock updates
+________________
+
+
+🧠 Final Recommended Architecture for You
+Adobe Commerce (Source of Truth)
+        ↓
+Event Observer / Webhook
+        ↓
+Middleware Transformation Layer
+        ↓
+Solr products_core
+        ↓
+AEM builds contextual query
+
+________________
+🎯 If Your Catalog Size Is:
+Size
+	Recommendation
+	<20k SKUs
+	Cron-based indexing OK
+	20k–100k
+	Event-driven push
+	100k+
+	Middleware + SolrCloud
+	________________
+
+
+🚀 If You Want Next
+I can provide:
+* Sample Magento Observer code to push to Solr
+* Middleware architecture diagram
+* Solr document mapping template for appliances
+* Real-world debugging guide (why wrong products appear)
+* Multi-core enterprise search architecture
+Tell me your catalog size and expected traffic — I’ll tailor the recommendation precisely.
+
+
+________________
+
+
+This is a very good architectural question — and this is where search quality is either won or destroyed.
+You asked:
+Why should I have separate cms_collection and support_collection?
+Why not just one cms_collection?
+And how do I index AEM content into Solr properly?
+Let’s break this down clearly.
+________________
+
+
+1️⃣ Do You Really Need Two CMS Collections?
+Short answer:
+👉 No — not always.
+👉 You only need separate collections if ranking logic is fundamentally different.
+________________
+
+
+When ONE cms_collection is Enough
+If your AEM content types are:
+* Blogs
+* Troubleshooting articles
+* Buying guides
+* FAQs
+* Warranty pages
+And they:
+* Use similar ranking signals
+* Don’t require different scoring logic
+* Can be filtered by a content_type field
+Then one cms_collection is perfectly fine.
+________________
+
+
+When You SHOULD Split (Advanced Case)
+Split into support_collection and blog_collection only if:
+* Support content must rank higher for repair intent
+* Blog content must rank higher for informational queries
+* Different boosting strategies required
+* Different analyzers required
+Example:
+Repair query:
+"washing machine not draining"
+You want:
+* Troubleshooting page first
+* Blog article lower
+If everything is in one collection but properly tagged, you can still solve this with boosting — no need for separate collections.
+________________
+
+
+🎯 Recommended Simpler Architecture for You
+Since you have:
+* products from Adobe Commerce
+* support/blog from AEM
+Use:
+products_collection
+cms_collection
+Inside cms_collection, differentiate using:
+content_type
+intent_tags
+Example document:
+{
+  "title": "Washing Machine Not Draining",
+  "content_type": "support",
+  "intent_tags": ["repair"],
+  "url": "/support/washing-machine-not-draining"
+}
+Blog:
+{
+  "title": "How to Choose the Right Washing Machine",
+  "content_type": "blog",
+  "intent_tags": ["buy"],
+  "url": "/blog/how-to-choose-washing-machine"
+}
+Then AEM boosts accordingly.
+________________
+
+
+2️⃣ How Should You Create & Populate cms_collection from AEM?
+This is the important part.
+AEM should NOT be crawled.
+You should index structured content via AEM service layer.
+________________
+
+
+🏗 Recommended AEM → Solr Indexing Architecture
+AEM Author
+     ↓
+Publish Activation Event
+     ↓
+OSGi Indexing Service
+     ↓
+Transform Page to JSON
+     ↓
+Push to Solr CMS Collection
+
+________________
+Step-by-Step Implementation
+________________
+
+
+1️⃣ Create cms_collection in Solr
+Example:
+cms_collection
+Schema fields:
+id
+title
+content
+content_type
+intent_tags
+tags
+category
+publish_date
+canonical_url
+Use canonical_url as uniqueKey.
+________________
+
+
+2️⃣ In AEM: Listen to Page Activation Events
+Use:
+* ReplicationEvent
+* Or ResourceChangeListener
+When page is:
+* Published
+* Modified
+* Unpublished
+Trigger indexing.
+________________
+
+
+3️⃣ Extract Structured Content (NOT Raw HTML)
+Inside AEM service:
+Page page = pageManager.getPage(path);
+
+
+String title = page.getTitle();
+String description = page.getDescription();
+String content = extractTextFromComponents(page);
+String contentType = page.getProperties().get("contentType");
+Important:
+Extract meaningful text from:
+* Rich text components
+* Title component
+* Metadata fields
+Strip HTML.
+Do NOT index full rendered HTML.
+________________
+
+
+4️⃣ Build Solr JSON Document
+Example:
+{
+  "id": "/support/washing-machine-not-draining",
+  "title": "Washing Machine Not Draining",
+  "content": "If your washing machine is not draining...",
+  "content_type": "support",
+  "intent_tags": ["repair"],
+  "tags": ["washing machine", "drainage"],
+  "publish_date": "2025-03-01T10:00:00Z",
+  "canonical_url": "/support/washing-machine-not-draining"
+}
+
+________________
+5️⃣ Push to Solr via HTTPClient
+POST:
+/solr/cms_collection/update?commitWithin=1000
+Batch if possible.
+________________
+
+
+6️⃣ Handle Unpublish
+When page is deactivated:
+Send:
+{
+  "delete": {
+    "id": "/support/washing-machine-not-draining"
+  }
+}
+
+________________
+3️⃣ Why NOT Crawl AEM Pages?
+Crawling:
+❌ Indexes navigation text
+❌ Indexes footer content
+❌ Pollutes relevance
+❌ No structured metadata
+❌ Hard to control intent_tags
+Always index structured content.
+________________
+
+
+4️⃣ How AEM Should Query CMS Collection
+Example repair query:
+q=washing machine not draining
+bq=intent_tags:repair^20
+bq=content_type:support^15
+Buy intent:
+bq=content_type:blog^5
+You can dynamically boost inside AEM.
+________________
+
+
+5️⃣ Final Architecture (Clean & Scalable)
+Adobe Commerce → products_collection
+AEM → cms_collection
+AEM UI → Intent Detection
+        ↓
+Query products + cms separately
+        ↓
+Merge Results
+
+________________
+6️⃣ When Single Unified Collection Becomes Problem
+If you mix products + CMS:
+* Repair article may rank below product
+* Numeric fields clash
+* Boost logic becomes complex
+* Harder to scale
+That’s why separate product & CMS collections is good.
+But CMS can remain single.
+________________
+
+
+🚀 Final Recommendation for You
+Since your setup is:
+* Commerce for products
+* AEM for blogs/support
+Use:
+products_collection
+cms_collection
+Inside CMS:
+Use content_type + intent_tags
+That is clean, scalable, and easier to manage.
+________________
+
+
+If you'd like, I can next provide:
+* AEM OSGi indexing service sample structure
+* ResourceChangeListener example
+* Solr schema for cms_collection
+* Full end-to-end indexing flow diagram
+* Query merging strategy (products + CMS results blending)
+Tell me your approximate content volume and traffic scale — I’ll optimize the recommendation further.

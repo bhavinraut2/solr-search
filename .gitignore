@@ -1,0 +1,87 @@
+# Solr data directories
+server/solr/*/data/
+server/solr/*/data/*
+**/data/index/
+**/data/snapshot_metadata/
+**/data/tlog/
+
+# Transaction logs
+server/solr/*/tlog/
+**/tlog/
+
+# Log files
+server/logs/
+*.log
+*.log.*
+
+# Port files
+bin/solr-*.port
+*.port
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Solr PID files
+bin/*.pid
+*.pid
+
+# Core auto-generated files
+server/solr/*/core.properties.bak
+
+# Zookeeper data (if using SolrCloud)
+server/solr/zoo_data/
+example/cloud/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE specific files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Build artifacts (if building from source)
+dist/
+build/
+target/
+*.class
+*.jar.asc
+
+# Package files
+*.zip
+*.tar.gz
+*.tgz
+
+# Environment specific configurations (optional - uncomment if needed)
+# server/solr/configsets/*/conf/solrconfig.xml
+# server/solr/configsets/*/conf/managed-schema
+
+# Local environment variables
+.env
+.env.local
+
+# Backup files
+*.bak
+*.backup
+backup/
+
+# Windows specific
+ehthumbs.db
+$RECYCLE.BIN/
+
+# Mac specific
+.AppleDouble
+.LSOverride

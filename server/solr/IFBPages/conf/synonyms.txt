@@ -1,0 +1,79 @@
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#-----------------------------------------------------------------------
+#some test synonym mappings unlikely to appear in real input text
+
+# Some synonym groups specific to this example
+GB,gib,gigabyte,gigabytes
+MB,mib,megabyte,megabytes
+Television, Televisions, TV, TVs
+#notice we use "gib" instead of "GiB" so any WordDelimiterGraphFilter coming
+#after us won't split it into two words.
+
+# Synonym mappings can be used for spelling correction too
+pixima => pixma
+
+# Refrigerator synonyms
+refrigerator, fridge, cooler, icebox, freezer, refridgerator, refrigarator, refridgerator, refrigarator, refrigirator, refridgerater, refrigrator, refrigertor, refrige, refridge, fridgee, frige, ref
+
+# Air Conditioner synonyms
+air conditioner, ac, a/c, cooler, air conditioning unit, split ac, window ac, central ac, conditioner, conditoner, condtioner, conditioner, coditioner, condtioner, condishoner, conditioner
+
+# Washing Machine synonyms
+washing machine, washer, laundry machine, clothes washer, automatic washer, semi automatic washer, wasing machine, wshing machine, washing mashine, washing machne, washing macine, washin machine, waashing machine, wasing machin
+
+# Dishwasher synonyms
+dishwasher, dish washer, dish wash, dishwash, dishwashing machine, dish cleaning machine, kitchen washer, dish cleaner, diswahser, dishwaser, dishwahser, dish washer, dishwacher, dishwisher, dishwasing
+
+# esentials synonyms
+essentials, essentails, esentials, essencials, essensials, essentiels
+
+# Clothes dryer synonyms
+clothes dryer, dryer, drying machine, drier, dryar
+
+# Convection synonyms
+convection, convetion, convextion, convektion, convectionn, convction, convections, conviction, convention, convetcion
+
+# Microwave synonyms
+microwave, microwawe, micorwave, microvave, micrwave, microwvae, mikrowave, microowave, microvawe, micrwoave, microwav, micowave, microwaves
+
+# Hob synonyms
+hob, hobs
+
+# Oven synonyms
+oven, ovens, owen
+
+# IFB Point synonyms
+IFB Point, ifb point, ifbpoint
+
+# Chimney synonyms
+chimney, chinmey, chimni, chimnee, chimne
+
+# Top load synonyms
+top load, tops load, tops loads, top loads, tops, top
+
+# Front load synonyms
+front load, fronts load, front loads, fronts loads, fronts, front
+
+Stabilizer, stabilizers, stablizer, stabelizer, stabilser, stabliser, stabliszer, stablisar, stabeliser, stabilizor, voltage
+
+#Litres based searches
+20 L, 20L, 20l
+206 L, 206L, 206l
+
+single refrigerator => single door
+double refrigerator => double door
+
+deepclean, deep clean
+spice, spices
+
