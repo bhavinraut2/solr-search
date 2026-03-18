@@ -92,6 +92,23 @@
       <filter class="solr.ArabicStemFilterFactory"/>
     </analyzer>
   </fieldType>
+  <fieldType name="text_autocomplete" class="solr.TextField" positionIncrementGap="100">
+    <analyzer type="index">
+      <tokenizer class="solr.StandardTokenizerFactory"/>
+      <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+      <filter class="solr.WordDelimiterGraphFilterFactory" catenateNumbers="0" generateNumberParts="0" splitOnCaseChange="1" generateWordParts="1" splitOnNumerics="0" preserveOriginal="1" catenateAll="0" catenateWords="1"/>
+      <filter class="solr.EdgeNGramFilterFactory" maxGramSize="15" minGramSize="3"/>
+      <filter class="solr.FlattenGraphFilterFactory"/>
+    </analyzer>
+    <analyzer type="query">
+      <tokenizer class="solr.StandardTokenizerFactory"/>
+      <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
+      <filter class="solr.SynonymGraphFilterFactory" expand="true" ignoreCase="true" synonyms="synonyms.txt"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+      <filter class="solr.WordDelimiterGraphFilterFactory" catenateNumbers="0" generateNumberParts="0" splitOnCaseChange="1" generateWordParts="1" splitOnNumerics="0" preserveOriginal="1" catenateAll="0" catenateWords="0"/>
+    </analyzer>
+  </fieldType>
   <fieldType name="text_bg" class="solr.TextField" positionIncrementGap="100">
     <analyzer>
       <tokenizer class="solr.StandardTokenizerFactory"/>
@@ -107,6 +124,21 @@
       <filter class="solr.LowerCaseFilterFactory"/>
       <filter class="solr.StopFilterFactory" words="lang/stopwords_ca.txt" ignoreCase="true"/>
       <filter class="solr.SnowballPorterFilterFactory" language="Catalan"/>
+    </analyzer>
+  </fieldType>
+  <fieldType name="text_capacity_exact" class="solr.TextField" positionIncrementGap="100">
+    <analyzer type="index">
+      <tokenizer class="solr.KeywordTokenizerFactory"/>
+      <filter class="solr.WordDelimiterGraphFilterFactory" catenateNumbers="1" generateNumberParts="1" splitOnCaseChange="1" generateWordParts="1" splitOnNumerics="1" preserveOriginal="1" catenateAll="0" catenateWords="0"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+      <filter class="solr.FlattenGraphFilterFactory"/>
+    </analyzer>
+    <analyzer type="query">
+      <tokenizer class="solr.KeywordTokenizerFactory"/>
+      <filter class="solr.WordDelimiterGraphFilterFactory" catenateNumbers="1" generateNumberParts="1" splitOnCaseChange="1" generateWordParts="1" splitOnNumerics="1" preserveOriginal="1" catenateAll="0" catenateWords="0"/>
+      <filter class="solr.SynonymGraphFilterFactory" expand="true" ignoreCase="true" synonyms="synonyms.txt"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+      <filter class="solr.FlattenGraphFilterFactory"/>
     </analyzer>
   </fieldType>
   <fieldType name="text_cjk" class="solr.TextField" positionIncrementGap="100">
@@ -291,7 +323,6 @@
       <tokenizer class="solr.StandardTokenizerFactory"/>
       <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
       <filter class="solr.LowerCaseFilterFactory"/>
-      <!-- EdgeNGram removed - was causing 1.5kg to partially match 1kg and 5kg -->
     </analyzer>
     <analyzer type="query">
       <tokenizer class="solr.StandardTokenizerFactory"/>
@@ -325,112 +356,6 @@
       <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
       <filter class="solr.SynonymGraphFilterFactory" expand="true" ignoreCase="true" synonyms="synonyms.txt"/>
       <filter class="solr.LowerCaseFilterFactory"/>
-    </analyzer>
-  </fieldType>
-  
-  <!-- Field type for CAPACITY ONLY - Smart tokenization handles ALL variants -->
-  <!-- Automatically splits "331l" → ["331", "l"], "7kg" → ["7", "kg"] -->
-  <!-- NO NEED for explicit synonyms for every capacity value! -->
-  <!-- Works for ANY number: 999kg, 1234l, 5678 amperes - all match automatically -->
-  <fieldType name="text_capacity_exact" class="solr.TextField" positionIncrementGap="100">
-    <analyzer type="index">
-      <tokenizer class="solr.KeywordTokenizerFactory"/>
-      <filter class="solr.WordDelimiterGraphFilterFactory"
-              generateWordParts="1"
-              generateNumberParts="1"
-              splitOnNumerics="1"
-              catenateWords="0"
-              catenateNumbers="1"
-              catenateAll="0"
-              splitOnCaseChange="1"
-              preserveOriginal="1"/>
-      <filter class="solr.LowerCaseFilterFactory"/>
-      <filter class="solr.FlattenGraphFilterFactory"/>
-    </analyzer>
-    <analyzer type="query">
-      <tokenizer class="solr.KeywordTokenizerFactory"/>
-      <filter class="solr.WordDelimiterGraphFilterFactory"
-              generateWordParts="1"
-              generateNumberParts="1"
-              splitOnNumerics="1"
-              catenateWords="0"
-              catenateNumbers="1"
-              catenateAll="0"
-              splitOnCaseChange="1"
-              preserveOriginal="1"/>
-      <filter class="solr.SynonymGraphFilterFactory" expand="true" ignoreCase="true" synonyms="synonyms.txt"/>
-      <filter class="solr.LowerCaseFilterFactory"/>
-      <filter class="solr.FlattenGraphFilterFactory"/>
-    </analyzer>
-  </fieldType>
-  
-  <!-- Field type for long descriptive text without EdgeNGram -->
-  <fieldType name="text_no_edgegram" class="solr.TextField" positionIncrementGap="100">
-    <analyzer type="index">
-      <tokenizer class="solr.StandardTokenizerFactory"/>
-      <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
-      <filter class="solr.LowerCaseFilterFactory"/>
-      <filter class="solr.WordDelimiterGraphFilterFactory" 
-              generateWordParts="1" 
-              generateNumberParts="0"
-              splitOnNumerics="0"
-              catenateWords="1" 
-              catenateNumbers="0" 
-              catenateAll="0" 
-              splitOnCaseChange="1"
-              preserveOriginal="1"/>
-      <filter class="solr.FlattenGraphFilterFactory"/>
-    </analyzer>
-    <analyzer type="query">
-      <tokenizer class="solr.StandardTokenizerFactory"/>
-      <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
-      <filter class="solr.SynonymGraphFilterFactory" expand="true" ignoreCase="true" synonyms="synonyms.txt"/>
-      <filter class="solr.LowerCaseFilterFactory"/>
-      <filter class="solr.WordDelimiterGraphFilterFactory" 
-              generateWordParts="1" 
-              generateNumberParts="0"
-              splitOnNumerics="0"
-              catenateWords="0" 
-              catenateNumbers="0" 
-              catenateAll="0" 
-              splitOnCaseChange="1"
-              preserveOriginal="1"/>
-    </analyzer>
-  </fieldType>
-  
-  <!-- Field type for autocomplete: SKU, productFeature, productCategory_search -->
-  <!-- WITH EdgeNGram for prefix matching, minGramSize=3 to avoid single digits -->
-  <fieldType name="text_autocomplete" class="solr.TextField" positionIncrementGap="100">
-    <analyzer type="index">
-      <tokenizer class="solr.StandardTokenizerFactory"/>
-      <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
-      <filter class="solr.LowerCaseFilterFactory"/>
-      <filter class="solr.WordDelimiterGraphFilterFactory" 
-              generateWordParts="1" 
-              generateNumberParts="0"
-              splitOnNumerics="0"
-              catenateWords="1" 
-              catenateNumbers="0" 
-              catenateAll="0" 
-              splitOnCaseChange="1"
-              preserveOriginal="1"/>
-      <filter class="solr.EdgeNGramFilterFactory" minGramSize="3" maxGramSize="15"/>
-      <filter class="solr.FlattenGraphFilterFactory"/>
-    </analyzer>
-    <analyzer type="query">
-      <tokenizer class="solr.StandardTokenizerFactory"/>
-      <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
-      <filter class="solr.SynonymGraphFilterFactory" expand="true" ignoreCase="true" synonyms="synonyms.txt"/>
-      <filter class="solr.LowerCaseFilterFactory"/>
-      <filter class="solr.WordDelimiterGraphFilterFactory" 
-              generateWordParts="1" 
-              generateNumberParts="0"
-              splitOnNumerics="0"
-              catenateWords="0" 
-              catenateNumbers="0" 
-              catenateAll="0" 
-              splitOnCaseChange="1"
-              preserveOriginal="1"/>
     </analyzer>
   </fieldType>
   <fieldType name="text_gl" class="solr.TextField" positionIncrementGap="100">
@@ -528,6 +453,22 @@
       <filter class="solr.SnowballPorterFilterFactory" language="Norwegian"/>
     </analyzer>
   </fieldType>
+  <fieldType name="text_no_edgegram" class="solr.TextField" positionIncrementGap="100">
+    <analyzer type="index">
+      <tokenizer class="solr.StandardTokenizerFactory"/>
+      <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+      <filter class="solr.WordDelimiterGraphFilterFactory" catenateNumbers="0" generateNumberParts="0" splitOnCaseChange="1" generateWordParts="1" splitOnNumerics="0" preserveOriginal="1" catenateAll="0" catenateWords="1"/>
+      <filter class="solr.FlattenGraphFilterFactory"/>
+    </analyzer>
+    <analyzer type="query">
+      <tokenizer class="solr.StandardTokenizerFactory"/>
+      <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
+      <filter class="solr.SynonymGraphFilterFactory" expand="true" ignoreCase="true" synonyms="synonyms.txt"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+      <filter class="solr.WordDelimiterGraphFilterFactory" catenateNumbers="0" generateNumberParts="0" splitOnCaseChange="1" generateWordParts="1" splitOnNumerics="0" preserveOriginal="1" catenateAll="0" catenateWords="0"/>
+    </analyzer>
+  </fieldType>
   <fieldType name="text_pt" class="solr.TextField" positionIncrementGap="100">
     <analyzer>
       <tokenizer class="solr.StandardTokenizerFactory"/>
@@ -587,27 +528,28 @@
   <field name="add" type="text_general"/>
   <field name="author" type="text_general"/>
   <field name="contentType" type="string" indexed="true" stored="true"/>
-  <field name="productType" type="string" indexed="true" stored="true"/>
-  <field name="productSegment" type="string" indexed="true" stored="true"/>
   <field name="delete" type="text_general"/>
   <field name="extra" type="text_general_singleval" indexed="true" stored="true"/>
   <field name="id" type="string" multiValued="false" indexed="true" required="true" stored="true"/>
   <field name="isCurrentlyUnavailable" type="text_general_singleval" uninvertible="false" indexed="false" stored="true"/>
   <field name="name" type="text_autocomplete" uninvertible="false" indexed="true" stored="true"/>
-  <field name="productCapacity" type="text_capacity_exact" uninvertible="false" indexed="true" stored="true" multiValued="true"/>
   <field name="pageContent" type="text_general" uninvertible="false" indexed="false" stored="true"/>
   <field name="path" type="string" uninvertible="false" indexed="false" stored="true"/>
   <field name="price" type="pdoubles"/>
-  <field name="productCategory" type="string" indexed="true" stored="true" docValues="true"/>
+  <field name="productCapacity" type="text_capacity_exact" uninvertible="false" multiValued="true" indexed="true" stored="true"/>
+  <field name="productCapacity_value" type="plongs" docValues="true" multiValued="true"/>
+  <field name="productCategory" type="string" docValues="true" indexed="true" stored="true"/>
   <field name="productCategory_search" type="text_autocomplete" uninvertible="false" indexed="true" stored="true"/>
   <field name="productDescription" type="text_no_edgegram" uninvertible="false" indexed="true" stored="true"/>
   <field name="productEmiAmount" type="text_general_singleval" uninvertible="false" indexed="false" stored="true"/>
   <field name="productFeature" type="text_autocomplete" uninvertible="false" indexed="true" stored="true"/>
-  <field name="productParentCategory" type="string" indexed="true" stored="true" docValues="true"/>
+  <field name="productParentCategory" type="string" docValues="true" indexed="true" stored="true"/>
   <field name="productPrice" type="text_general_singleval" uninvertible="false" indexed="false" stored="true"/>
+  <field name="productSegment" type="string" indexed="true" stored="true"/>
   <field name="productSmallFeature" type="text_autocomplete" uninvertible="false" indexed="true" stored="true"/>
   <field name="productSubCategory" type="text_general_singleval" uninvertible="false" indexed="true" stored="true"/>
   <field name="productSubCategory_search" type="text_autocomplete" uninvertible="false" indexed="true" stored="true"/>
+  <field name="productType" type="string" indexed="true" stored="true"/>
   <field name="productUrlKey" type="text_general_singleval" uninvertible="false" indexed="true" stored="true"/>
   <field name="sku" type="text_general_singleval" uninvertible="false" indexed="true" stored="true"/>
   <field name="spellWords" type="spellcheck_text" default="" multiValued="true" indexed="true" stored="true"/>
@@ -684,9 +626,6 @@
   <dynamicField name="*_f" type="pfloat" indexed="true" stored="true"/>
   <dynamicField name="*_d" type="pdouble" indexed="true" stored="true"/>
   <dynamicField name="*_p" type="location" indexed="true" stored="true"/>
-  <!-- Removed: spellWords now controlled in Java code to exclude Blog contentType -->
-  <!-- <copyField source="name" dest="spellWords"/> -->
-  <!-- <copyField source="title" dest="spellWords"/> -->
   <copyField source="productCategory" dest="productCategory_search"/>
   <copyField source="productSubCategory" dest="productSubCategory_search"/>
 </schema>
