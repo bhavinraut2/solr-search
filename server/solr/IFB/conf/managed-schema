@@ -537,7 +537,7 @@
   <field name="path" type="string" uninvertible="false" indexed="false" stored="true"/>
   <field name="price" type="pdoubles"/>
   <field name="productCapacity" type="text_capacity_exact" uninvertible="false" multiValued="true" indexed="true" stored="true"/>
-  <field name="productCapacity_value" type="plongs" docValues="true" multiValued="true"/>
+  <field name="productCapacity_value" type="pdoubles" docValues="true" multiValued="true"/>
   <field name="productCategory" type="string" docValues="true" indexed="true" stored="true"/>
   <field name="productCategory_search" type="text_autocomplete" uninvertible="false" indexed="true" stored="true"/>
   <field name="productDescription" type="text_no_edgegram" uninvertible="false" indexed="true" stored="true"/>
