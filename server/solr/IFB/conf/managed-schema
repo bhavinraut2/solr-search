@@ -527,6 +527,7 @@
   <field name="_version_" type="plong" indexed="false" stored="false"/>
   <field name="add" type="text_general"/>
   <field name="author" type="text_general"/>
+  <field name="commit" type="text_general"/>
   <field name="contentType" type="string" indexed="true" stored="true"/>
   <field name="delete" type="text_general"/>
   <field name="extra" type="text_general_singleval" indexed="true" stored="true"/>
@@ -537,7 +538,7 @@
   <field name="path" type="string" uninvertible="false" indexed="false" stored="true"/>
   <field name="price" type="pdoubles"/>
   <field name="productCapacity" type="text_capacity_exact" uninvertible="false" multiValued="true" indexed="true" stored="true"/>
-  <field name="productCapacity_value" type="pdoubles" docValues="true" multiValued="true"/>
+  <field name="productCapacity_value" type="pdoubles" multiValued="true" docValues="true"/>
   <field name="productCategory" type="string" docValues="true" indexed="true" stored="true"/>
   <field name="productCategory_search" type="text_autocomplete" uninvertible="false" indexed="true" stored="true"/>
   <field name="productDescription" type="text_no_edgegram" uninvertible="false" indexed="true" stored="true"/>
@@ -551,12 +552,16 @@
   <field name="productSubCategory_search" type="text_autocomplete" uninvertible="false" indexed="true" stored="true"/>
   <field name="productType" type="string" indexed="true" stored="true"/>
   <field name="productUrlKey" type="text_general_singleval" uninvertible="false" indexed="true" stored="true"/>
+  <field name="product_specification" type="text_general"/>
   <field name="sku" type="text_general_singleval" uninvertible="false" indexed="true" stored="true"/>
   <field name="spellWords" type="spellcheck_text" default="" multiValued="true" indexed="true" stored="true"/>
   <field name="status" type="text_general_singleval" uninvertible="false" indexed="false" stored="true"/>
+  <field name="suggest_text" type="text_general"/>
   <field name="supportCategoryName" type="text_general_singleval" uninvertible="false" indexed="true" stored="true"/>
   <field name="title" type="text_autocomplete" uninvertible="false" indexed="true" stored="true"/>
+  <field name="type" type="text_general"/>
   <field name="visibility" type="text_general_singleval" uninvertible="false" indexed="false" stored="true"/>
+  <field name="weight" type="plongs"/>
   <dynamicField name="*_txt_en_split_tight" type="text_en_splitting_tight" indexed="true" stored="true"/>
   <dynamicField name="*_descendent_path" type="descendent_path" indexed="true" stored="true"/>
   <dynamicField name="*_ancestor_path" type="ancestor_path" indexed="true" stored="true"/>
@@ -628,4 +633,8 @@
   <dynamicField name="*_p" type="location" indexed="true" stored="true"/>
   <copyField source="productCategory" dest="productCategory_search"/>
   <copyField source="productSubCategory" dest="productSubCategory_search"/>
+  <copyField source="product_specification" dest="product_specification_str" maxChars="256"/>
+  <copyField source="commit" dest="commit_str" maxChars="256"/>
+  <copyField source="suggest_text" dest="suggest_text_str" maxChars="256"/>
+  <copyField source="type" dest="type_str" maxChars="256"/>
 </schema>
