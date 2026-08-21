@@ -527,10 +527,16 @@
   <field name="_version_" type="plong" indexed="false" stored="false"/>
   <field name="add" type="text_general"/>
   <field name="author" type="text_general"/>
+  <field name="authorName" type="text_general"/>
+  <field name="blogDescription" type="text_general"/>
+  <field name="blogReadTime" type="text_general"/>
+  <field name="blogTitle" type="text_general"/>
   <field name="commit" type="text_general"/>
   <field name="contentType" type="string" indexed="true" stored="true"/>
+  <field name="date" type="text_general"/>
   <field name="delete" type="text_general"/>
   <field name="extra" type="text_general_singleval" indexed="true" stored="true"/>
+  <field name="featuredImage" type="text_general"/>
   <field name="id" type="string" multiValued="false" indexed="true" required="true" stored="true"/>
   <field name="isCurrentlyUnavailable" type="text_general_singleval" uninvertible="false" indexed="false" stored="true"/>
   <field name="name" type="text_autocomplete" uninvertible="false" indexed="true" stored="true"/>
@@ -637,4 +643,10 @@
   <copyField source="commit" dest="commit_str" maxChars="256"/>
   <copyField source="suggest_text" dest="suggest_text_str" maxChars="256"/>
   <copyField source="type" dest="type_str" maxChars="256"/>
+  <copyField source="date" dest="date_str" maxChars="256"/>
+  <copyField source="featuredImage" dest="featuredImage_str" maxChars="256"/>
+  <copyField source="authorName" dest="authorName_str" maxChars="256"/>
+  <copyField source="blogReadTime" dest="blogReadTime_str" maxChars="256"/>
+  <copyField source="blogTitle" dest="blogTitle_str" maxChars="256"/>
+  <copyField source="blogDescription" dest="blogDescription_str" maxChars="256"/>
 </schema>
