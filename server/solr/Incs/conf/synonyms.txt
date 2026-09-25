@@ -1,0 +1,120 @@
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#-----------------------------------------------------------------------
+# IFB Product Search Synonyms
+# WordDelimiterGraphFilter automatically handles "7kg" → ["7", "kg"]
+# So we only need BASE UNIT synonyms, not every specific value!
+
+# Some synonym groups specific to this example
+GB,gib,gigabyte,gigabytes
+MB,mib,megabyte,megabytes
+Television, Televisions, TV, TVs
+
+# Synonym mappings can be used for spelling correction too
+pixima => pixma
+
+# Refrigerator synonyms
+refrigerator, fridge, cooler, icebox, freezer, refridgerator, refrigarator, refridgerator, refrigarator, refrigirator, refridgerater, refrigrator, refrigertor, refrige, refridge, fridgee, frige, ref
+
+# Air Conditioner synonyms
+air conditioner, ac, a/c, cooler, air conditioning unit, split ac, window ac, central ac, conditioner, conditoner, condtioner, conditioner, coditioner, condtioner, condishoner, conditioner
+
+# Washing Machine synonyms
+washing machine, washer, laundry machine, clothes washer, automatic washer, semi automatic washer, wasing machine, wshing machine, washing mashine, washing machne, washing macine, washin machine, waashing machine, wasing machin
+
+# Dishwasher synonyms
+dishwasher, dish washer, dish wash, dishwash, dishwashing machine, dish cleaning machine, kitchen washer, dish cleaner, diswahser, dishwaser, dishwahser, dish washer, dishwacher, dishwisher, dishwasing
+
+# Essentials synonyms
+essentials, essentails, esentials, essencials, essensials, essentiels
+
+# Clothes dryer synonyms
+clothes dryer, dryer, drying machine, drier, dryar
+
+# Convection synonyms
+convection, convetion, convextion, convektion, convectionn, convction, convections, conviction, convention, convetcion
+
+# Microwave synonyms
+microwave, microwawe, micorwave, microvave, micrwave, microwvae, mikrowave, microowave, microvawe, micrwoave, microwav, micowave, microwaves
+
+# Hob synonyms
+hob, hobs
+
+# Oven synonyms
+oven, ovens, owen
+
+# IFB Point synonyms
+IFB Point, ifb point, ifbpoint
+
+# Chimney synonyms
+chimney, chinmey, chimni, chimnee, chimne
+
+# Top load synonyms
+top load, tops load, tops loads, top loads, tops, top
+
+# Front load synonyms
+front load, fronts load, front loads, fronts loads, fronts, front
+
+Stabilizer, stabilizers, stablizer, stabelizer, stabilser, stabliser, stabliszer, stablisar, stabeliser, stabilizor, voltage
+
+single refrigerator => single door
+double refrigerator => double door
+
+deepclean, deep clean
+spice, spices
+
+# ============================================================================
+# CAPACITY UNIT SYNONYMS
+# ============================================================================
+# WordDelimiterGraphFilter automatically splits "331l" → ["331", "l"]
+# So we ONLY need base unit synonyms - works for ANY number!
+
+# Ton variations (Air Conditioners)
+# "1.5ton", "1.5 ton", "1.5 t", "1.5 tonne" all work automatically!
+ton, tonne, tons, t
+
+# Kilogram variations (Washing Machines, Dryers)
+# "7kg", "7 kg", "7 kgs", "7 kilogram" all work automatically!
+kg, kgs, kilogram, kilograms, kilo
+
+# Liter variations (Refrigerators, Microwaves)
+# "331l", "331 L", "331 liter", "331 litre" all work automatically!
+liter, litre, liters, litres, l, L
+
+# Ampere variations (Voltage Stabilizers)
+# "15a", "15 amp", "15 ampere", "15 Amperes" all work automatically!
+ampere, amperes, amp, amps, a, A
+
+# Watt variations (Microwaves, Power)
+# "800w", "800 watt", "800 W" all work automatically!
+watt, watts, w, W
+
+# Kilowatt variations
+# "1.5kw", "1.5 kw", "1.5 kilowatt" all work automatically!
+kw, KW, kilowatt, kilowatts
+
+# Place Settings (Dishwashers)
+# "15ps", "15 place setting", "15 place settings" all work automatically!
+place setting, place settings, ps, PS
+
+# Volume units
+cubic feet, cu ft, cu.ft, cuft
+cubic meter, cu m, cu.m, cum
+
+# Star Rating synonyms
+star, stars
+1 star, 1star, 1-star, one star
+2 star, 2star, 2-star, two star
+3 star, 3star, 3-star, three star
+4 star, 4star, 4-star, four star
+5 star, 5star, 5-star, five star

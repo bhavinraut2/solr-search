@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ Solr Configuration for Autocomplete Suggestions
+ Minimal and optimized for low-latency prefix matching
+-->
+<config>
+  
+  <luceneMatchVersion>8.11.4</luceneMatchVersion>
+  
+  <!-- ===========================
+       DATA DIRECTORY
+       =========================== -->
+  <dataDir>${solr.data.dir:}</dataDir>
+
+  <!-- ===========================
+       DIRECTORY FACTORY
+       =========================== -->
+  <directoryFactory name="DirectoryFactory" class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}"/>
+
+  <!-- ===========================
+       CODEC FACTORY
+       =========================== -->
+  <codecFactory class="solr.SchemaCodecFactory"/>
+
+  <!-- ===========================
+       INDEX CONFIG
+       =========================== -->
+  <indexConfig>
+    <lockType>${solr.lock.type:native}</lockType>
+    <ramBufferSizeMB>100</ramBufferSizeMB>
+    <maxBufferedDocs>1000</maxBufferedDocs>
+    <useCompoundFile>false</useCompoundFile>
+    
+    <mergePolicyFactory class="org.apache.solr.index.TieredMergePolicyFactory">
+      <int name="maxMergeAtOnce">10</int>
+      <int name="segmentsPerTier">10</int>
+    </mergePolicyFactory>
+  </indexConfig>
+
+  <!-- ===========================
+       UPDATE HANDLER
+       =========================== -->
+  <updateHandler class="solr.DirectUpdateHandler2">
+    <updateLog>
+      <str name="dir">${solr.ulog.dir:}</str>
+    </updateLog>
+    <autoCommit>
+      <maxTime>${solr.autoCommit.maxTime:15000}</maxTime>
+      <openSearcher>false</openSearcher>
+    </autoCommit>
+    <autoSoftCommit>
+      <maxTime>${solr.autoSoftCommit.maxTime:1000}</maxTime>
+    </autoSoftCommit>
+  </updateHandler>
+
+  <!-- ===========================
+       QUERY SETTINGS
+       =========================== -->
+  <query>
+    <maxBooleanClauses>${solr.max.booleanClauses:1024}</maxBooleanClauses>
+    <filterCache class="solr.CaffeineCache"
+                 size="512"
+                 initialSize="512"
+                 autowarmCount="128"/>
+    <queryResultCache class="solr.CaffeineCache"
+                      size="512"
+                      initialSize="512"
+                      autowarmCount="128"/>
+    <documentCache class="solr.CaffeineCache"
+                   size="512"
+                   initialSize="512"
+                   autowarmCount="0"/>
+    <enableLazyFieldLoading>true</enableLazyFieldLoading>
+    <queryResultWindowSize>50</queryResultWindowSize>
+    <queryResultMaxDocsCached>200</queryResultMaxDocsCached>
+  </query>
+
+  <!-- ===========================
+       REQUEST DISPATCHER
+       =========================== -->
+  <requestDispatcher>
+    <requestParsers enableRemoteStreaming="false" multipartUploadLimitInKB="2048000" formdataUploadLimitInKB="2048" addHttpRequestToContext="false"/>
+    <httpCaching never304="true" />
+  </requestDispatcher>
+
+  <!-- ===========================
+       REQUEST HANDLERS
+       =========================== -->
+  
+  <!-- 
+    Autocomplete/Suggest Request Handler
+    Optimized for prefix matching with weight-based ranking
+    
+    Example queries:
+    - Basic: /suggest?q=wash*&rows=10
+    - With type filter: /suggest?q=wash*&fq=type:product&rows=10
+    - Minimum match: /suggest?q=wash machine&mm=50%&rows=10
+  -->
+  <requestHandler name="/suggest" class="solr.SearchHandler">
+    <lst name="defaults">
+      <!-- Use edismax for flexible query parsing -->
+      <str name="defType">edismax</str>
+      
+      <!-- Search in suggest_text field (prefix) and fuzzy field (typo tolerance) -->
+      <str name="qf">suggest_text^3.0 suggest_text_fuzzy^1.5 text^1.0</str>
+      
+      <!-- Fields to return -->
+      <str name="fl">id,suggest_text,type,weight</str>
+      
+      <!-- Sort by weight descending (higher weight = more important) -->
+      <str name="sort">weight desc, score desc</str>
+      
+      <!-- Default rows -->
+      <int name="rows">10</int>
+      
+      <!-- Query params -->
+      <str name="wt">json</str>
+      <bool name="indent">true</bool>
+      
+      <!-- Minimum match for multi-word queries -->
+      <str name="mm">80%</str>
+      
+      <!-- Phrase fields for better multi-word matching -->
+      <str name="pf">suggest_text^5.0 suggest_text_fuzzy^2.0</str>
+      <int name="ps">2</int>
+      
+      <!-- Enable fuzzy matching with edit distance 2 -->
+      <str name="qs">2</str>
+    </lst>
+  </requestHandler>
+
+  <!-- 
+    Standard Search Handler
+    For general queries without prefix bias
+  -->
+  <requestHandler name="/select" class="solr.SearchHandler">
+    <lst name="defaults">
+      <str name="echoParams">explicit</str>
+      <int name="rows">10</int>
+      <str name="df">suggest_text</str>
+      <str name="defType">edismax</str>
+      <str name="qf">suggest_text^3.0 suggest_text_fuzzy^1.5 text^1.0</str>
+      <str name="fl">*,score</str>
+      <str name="sort">weight desc, score desc</str>
+      <str name="qs">2</str>
+    </lst>
+  </requestHandler>
+
+  <!-- 
+    Query Handler - Minimal config for direct queries
+  -->
+  <requestHandler name="/query" class="solr.SearchHandler">
+    <lst name="defaults">
+      <str name="echoParams">explicit</str>
+      <str name="wt">json</str>
+      <str name="indent">true</str>
+      <str name="df">suggest_text</str>
+    </lst>
+  </requestHandler>
+
+  <!-- Admin Handlers -->
+  <requestHandler name="/admin/ping" class="solr.PingRequestHandler">
+    <lst name="invariants">
+      <str name="q">*:*</str>
+    </lst>
+    <lst name="defaults">
+      <str name="echoParams">all</str>
+    </lst>
+  </requestHandler>
+
+  <!-- Update Request Handler -->
+  <requestHandler name="/update" class="solr.UpdateRequestHandler" />
+
+  <!-- ===========================
+       ADMIN HANDLERS
+       =========================== -->
+  <admin>
+    <defaultQuery>*:*</defaultQuery>
+  </admin>
+
+</config>

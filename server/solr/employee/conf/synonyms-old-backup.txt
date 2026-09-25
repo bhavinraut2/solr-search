@@ -1,0 +1,313 @@
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#-----------------------------------------------------------------------
+#some test synonym mappings unlikely to appear in real input text
+
+# Some synonym groups specific to this example
+GB,gib,gigabyte,gigabytes
+MB,mib,megabyte,megabytes
+Television, Televisions, TV, TVs
+#notice we use "gib" instead of "GiB" so any WordDelimiterGraphFilter coming
+#after us won't split it into two words.
+
+# Synonym mappings can be used for spelling correction too
+pixima => pixma
+
+# Refrigerator synonyms
+refrigerator, fridge, cooler, icebox, freezer, refridgerator, refrigarator, refridgerator, refrigarator, refrigirator, refridgerater, refrigrator, refrigertor, refrige, refridge, fridgee, frige, ref
+
+# Air Conditioner synonyms
+air conditioner, ac, a/c, cooler, air conditioning unit, split ac, window ac, central ac, conditioner, conditoner, condtioner, conditioner, coditioner, condtioner, condishoner, conditioner
+
+# Washing Machine synonyms
+washing machine, washer, laundry machine, clothes washer, automatic washer, semi automatic washer, wasing machine, wshing machine, washing mashine, washing machne, washing macine, washin machine, waashing machine, wasing machin
+
+# Dishwasher synonyms
+dishwasher, dish washer, dish wash, dishwash, dishwashing machine, dish cleaning machine, kitchen washer, dish cleaner, diswahser, dishwaser, dishwahser, dish washer, dishwacher, dishwisher, dishwasing
+
+# esentials synonyms
+essentials, essentails, esentials, essencials, essensials, essentiels
+
+# Clothes dryer synonyms
+clothes dryer, dryer, drying machine, drier, dryar
+
+# Convection synonyms
+convection, convetion, convextion, convektion, convectionn, convction, convections, conviction, convention, convetcion
+
+# Microwave synonyms
+microwave, microwawe, micorwave, microvave, micrwave, microwvae, mikrowave, microowave, microvawe, micrwoave, microwav, micowave, microwaves
+
+# Hob synonyms
+hob, hobs
+
+# Oven synonyms
+oven, ovens, owen
+
+# IFB Point synonyms
+IFB Point, ifb point, ifbpoint
+
+# Chimney synonyms
+chimney, chinmey, chimni, chimnee, chimne
+
+# Top load synonyms
+top load, tops load, tops loads, top loads, tops, top
+
+# Front load synonyms
+front load, fronts load, front loads, fronts loads, fronts, front
+
+Stabilizer, stabilizers, stablizer, stabelizer, stabilser, stabliser, stabliszer, stablisar, stabeliser, stabilizor, voltage
+
+#Litres based searches
+20 L, 20L, 20l
+206 L, 206L, 206l
+
+single refrigerator => single door
+double refrigerator => double door
+
+deepclean, deep clean
+spice, spices
+
+# Capacity synonyms - Ton variations (for AC)
+# Base unit synonyms
+ton, tonne, tons, t
+
+# Explicit space normalization (handles "1.5ton" -> "1.5 ton")
+0.75ton => 0.75 ton
+0.75tonne => 0.75 ton
+0.75t => 0.75 ton
+0.8ton => 0.8 ton
+0.8tonne => 0.8 ton
+0.8t => 0.8 ton
+1ton => 1 ton
+1tonne => 1 ton
+1t => 1 ton
+1.0ton => 1 ton
+1.2ton => 1.2 ton
+1.2tonne => 1.2 ton
+1.2t => 1.2 ton
+1.5ton => 1.5 ton
+1.5tonne => 1.5 ton
+1.5t => 1.5 ton
+1.6ton => 1.6 ton
+1.6tonne => 1.6 ton
+1.6t => 1.6 ton
+1.8ton => 1.8 ton
+1.8tonne => 1.8 ton
+1.8t => 1.8 ton
+2ton => 2 ton
+2tonne => 2 ton
+2t => 2 ton
+2.0ton => 2 ton
+
+# Capacity synonyms - KG variations  
+# Base unit synonyms
+kg, kgs, kilogram, kilograms, kilo
+
+# Explicit space normalization (handles "7kg" -> "7 kg")
+1kg => 1 kg
+1kgs => 1 kg
+1.5kg => 1.5 kg
+1.5kgs => 1.5 kg
+2kg => 2 kg
+2kgs => 2 kg
+2.5kg => 2.5 kg
+2.5kgs => 2.5 kg
+3kg => 3 kg
+3kgs => 3 kg
+3.5kg => 3.5 kg
+3.5kgs => 3.5 kg
+4kg => 4 kg
+4kgs => 4 kg
+4.5kg => 4.5 kg
+4.5kgs => 4.5 kg
+5kg => 5 kg
+5kgs => 5 kg
+5.5kg => 5.5 kg
+5.5kgs => 5.5 kg
+6kg => 6 kg
+6kgs => 6 kg
+6.5kg => 6.5 kg
+6.5kgs => 6.5 kg
+7kg => 7 kg
+7kgs => 7 kg
+7.5kg => 7.5 kg
+7.5kgs => 7.5 kg
+8kg => 8 kg
+8kgs => 8 kg
+8.5kg => 8.5 kg
+8.5kgs => 8.5 kg
+9kg => 9 kg
+9kgs => 9 kg
+9.5kg => 9.5 kg
+9.5kgs => 9.5 kg
+10kg => 10 kg
+10kgs => 10 kg
+11kg => 11 kg
+11kgs => 11 kg
+12kg => 12 kg
+12kgs => 12 kg
+
+
+# Capacity synonyms - Liter variations (for Refrigerators, Microwaves)
+# Base unit synonyms
+liters, litres, liter, litre, l, L
+
+# Explicit space normalization (handles "331l" -> "331 L")
+17l => 17 L
+17L => 17 L
+20l => 20 L
+20L => 20 L
+23l => 23 L
+23L => 23 L
+25l => 25 L
+25L => 25 L
+28l => 28 L
+28L => 28 L
+30l => 30 L
+30L => 30 L
+187l => 187 L
+187L => 187 L
+190l => 190 L
+190L => 190 L
+197l => 197 L
+197L => 197 L
+206l => 206 L
+206L => 206 L
+215l => 215 L
+215L => 215 L
+235l => 235 L
+235L => 235 L
+241l => 241 L
+241L => 241 L
+251l => 251 L
+251L => 251 L
+255l => 255 L
+255L => 255 L
+284l => 284 L
+284L => 284 L
+310l => 310 L
+310L => 310 L
+331l => 331 L
+331L => 331 L
+
+# Also support "331 liters" -> "331 L"
+17 liters => 17 L
+17 litres => 17 L
+20 liters => 20 L
+20 litres => 20 L
+187 liters => 187 L
+187 litres => 187 L
+190 liters => 190 L
+190 litres => 190 L
+197 liters => 197 L
+197 litres => 197 L
+206 liters => 206 L
+206 litres => 206 L
+215 liters => 215 L
+215 litres => 215 L
+235 liters => 235 L
+235 litres => 235 L
+241 liters => 241 L
+241 litres => 241 L
+251 liters => 251 L
+251 litres => 251 L
+255 liters => 255 L
+255 litres => 255 L
+284 liters => 284 L
+284 litres => 284 L
+310 liters => 310 L
+310 litres => 310 L
+331 liters => 331 L
+331 litres => 331 L
+
+
+# Capacity synonyms - Ampere/Amp variations (for Voltage Stabilizers)
+# Base unit synonyms
+ampere, amperes, amp, amps
+
+# Explicit space normalization (handles "15a" -> "15 Amperes")
+6a => 6 Amperes
+6A => 6 Amperes
+6amp => 6 Amperes
+6amps => 6 Amperes
+6ampere => 6 Amperes
+6amperes => 6 Amperes
+10a => 10 Amperes
+10A => 10 Amperes
+10amp => 10 Amperes
+10amps => 10 Amperes
+10ampere => 10 Amperes
+10amperes => 10 Amperes
+12a => 12 Amperes
+12A => 12 Amperes
+12amp => 12 Amperes
+12amps => 12 Amperes
+12ampere => 12 Amperes
+12amperes => 12 Amperes
+15a => 15 Amperes
+15A => 15 Amperes
+15amp => 15 Amperes
+15amps => 15 Amperes
+15ampere => 15 Amperes
+15amperes => 15 Amperes
+20a => 20 Amperes
+20A => 20 Amperes
+20amp => 20 Amperes
+20amps => 20 Amperes
+20ampere => 20 Amperes
+20amperes => 20 Amperes
+25a => 25 Amperes
+25A => 25 Amperes
+25amp => 25 Amperes
+25amps => 25 Amperes
+25ampere => 25 Amperes
+25amperes => 25 Amperes
+30a => 30 Amperes
+30A => 30 Amperes
+30amp => 30 Amperes
+30amps => 30 Amperes
+30ampere => 30 Amperes
+30amperes => 30 Amperes
+
+# Capacity synonyms - Watt variations (for Microwaves, Power)
+watt, watts, w
+800 watt, 800 watts, 800w, 800W
+900 watt, 900 watts, 900w, 900W
+1000 watt, 1000 watts, 1000w, 1000W
+1200 watt, 1200 watts, 1200w, 1200W
+1400 watt, 1400 watts, 1400w, 1400W
+
+# Capacity synonyms - KW variations (for Kilowatt)
+kw, kilowatt, kilowatts
+1 kw, 1kw, 1 kilowatt
+1.5 kw, 1.5kw, 1.5 kilowatt
+2 kw, 2kw, 2 kilowatt
+3 kw, 3kw, 3 kilowatt
+
+# Capacity synonyms - Place Settings variations (for Dishwashers)
+place setting, place settings, ps
+12 place setting, 12 place settings, 12ps, 12 PS
+14 place setting, 14 place settings, 14ps, 14 PS
+15 place setting, 15 place settings, 15ps, 15 PS
+
+# Capacity synonyms - Volume variations (for Refrigerators/Freezers)
+cubic feet, cu ft, cu.ft, cuft
+cubic meter, cu m, cu.m, cum
+
+# Star Rating synonyms
+star, stars
+1 star, 1star, 1-star, one star
+2 star, 2star, 2-star, two star
+3 star, 3star, 3-star, three star
+4 star, 4star, 4-star, four star
+5 star, 5star, 5-star, five star
