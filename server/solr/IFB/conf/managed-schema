@@ -83,6 +83,13 @@
   </fieldType>
   <fieldType name="string" class="solr.StrField" sortMissingLast="true" docValues="true"/>
   <fieldType name="strings" class="solr.StrField" sortMissingLast="true" docValues="true" multiValued="true"/>
+  <!-- No synonyms/stopwords - AnalyzingInfixSuggester can't resolve the branching token graph SynonymGraphFilter produces -->
+  <fieldType name="suggest_text" class="solr.TextField" positionIncrementGap="100">
+    <analyzer>
+      <tokenizer class="solr.StandardTokenizerFactory"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+    </analyzer>
+  </fieldType>
   <fieldType name="text_ar" class="solr.TextField" positionIncrementGap="100">
     <analyzer>
       <tokenizer class="solr.StandardTokenizerFactory"/>
@@ -98,15 +105,16 @@
       <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
       <filter class="solr.LowerCaseFilterFactory"/>
       <filter class="solr.WordDelimiterGraphFilterFactory" catenateNumbers="0" generateNumberParts="0" splitOnCaseChange="1" generateWordParts="1" splitOnNumerics="0" preserveOriginal="1" catenateAll="0" catenateWords="1"/>
-      <filter class="solr.EdgeNGramFilterFactory" maxGramSize="15" minGramSize="3"/>
+      <filter class="solr.EdgeNGramFilterFactory" maxGramSize="15" minGramSize="3" preserveOriginal="true"/>
       <filter class="solr.FlattenGraphFilterFactory"/>
     </analyzer>
     <analyzer type="query">
       <tokenizer class="solr.StandardTokenizerFactory"/>
       <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
+      <filter class="solr.WordDelimiterGraphFilterFactory" catenateNumbers="0" generateNumberParts="0" splitOnCaseChange="1" generateWordParts="1" splitOnNumerics="0" preserveOriginal="1" catenateAll="0" catenateWords="0"/>
       <filter class="solr.SynonymGraphFilterFactory" expand="true" ignoreCase="true" synonyms="synonyms.txt"/>
       <filter class="solr.LowerCaseFilterFactory"/>
-      <filter class="solr.WordDelimiterGraphFilterFactory" catenateNumbers="0" generateNumberParts="0" splitOnCaseChange="1" generateWordParts="1" splitOnNumerics="0" preserveOriginal="1" catenateAll="0" catenateWords="0"/>
+      <filter class="solr.FlattenGraphFilterFactory"/>
     </analyzer>
   </fieldType>
   <fieldType name="text_bg" class="solr.TextField" positionIncrementGap="100">
@@ -464,9 +472,10 @@
     <analyzer type="query">
       <tokenizer class="solr.StandardTokenizerFactory"/>
       <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
+      <filter class="solr.WordDelimiterGraphFilterFactory" catenateNumbers="0" generateNumberParts="0" splitOnCaseChange="1" generateWordParts="1" splitOnNumerics="0" preserveOriginal="1" catenateAll="0" catenateWords="0"/>
       <filter class="solr.SynonymGraphFilterFactory" expand="true" ignoreCase="true" synonyms="synonyms.txt"/>
       <filter class="solr.LowerCaseFilterFactory"/>
-      <filter class="solr.WordDelimiterGraphFilterFactory" catenateNumbers="0" generateNumberParts="0" splitOnCaseChange="1" generateWordParts="1" splitOnNumerics="0" preserveOriginal="1" catenateAll="0" catenateWords="0"/>
+      <filter class="solr.FlattenGraphFilterFactory"/>
     </analyzer>
   </fieldType>
   <fieldType name="text_pt" class="solr.TextField" positionIncrementGap="100">

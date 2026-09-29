@@ -24,13 +24,19 @@ Television, Televisions, TV, TVs
 pixima => pixma
 
 # Refrigerator synonyms
-refrigerator, fridge, cooler, icebox, freezer, refridgerator, refrigarator, refridgerator, refrigarator, refrigirator, refridgerater, refrigrator, refrigertor, refrige, refridge, fridgee, frige, ref
+# NOTE: "ref" removed - too short/generic, collides with EdgeNGram (minGram=3) prefixes of unrelated
+# words like "Refresher" causing false matches on other product categories
+refrigerator, fridge, cooler, icebox, freezer, refridgerator, refrigarator, refridgerator, refrigarator, refrigirator, refridgerater, refrigrator, refrigertor, refrige, refridge, fridgee, frige
 
 # Air Conditioner synonyms
 air conditioner, ac, a/c, cooler, air conditioning unit, split ac, window ac, central ac, conditioner, conditoner, condtioner, conditioner, coditioner, condtioner, condishoner, conditioner
+airconditioner => air conditioner
+airconditioners => air conditioners
 
 # Washing Machine synonyms
 washing machine, washer, laundry machine, clothes washer, automatic washer, semi automatic washer, wasing machine, wshing machine, washing mashine, washing machne, washing macine, washin machine, waashing machine, wasing machin
+washingmachine => washing machine
+washingmachines => washing machines
 
 # Dishwasher synonyms
 dishwasher, dish washer, dish wash, dishwash, dishwashing machine, dish cleaning machine, kitchen washer, dish cleaner, diswahser, dishwaser, dishwahser, dish washer, dishwacher, dishwisher, dishwasing
@@ -65,7 +71,9 @@ top load, tops load, tops loads, top loads, tops, top
 # Front load synonyms
 front load, fronts load, front loads, fronts loads, fronts, front
 
-Stabilizer, stabilizers, stablizer, stabelizer, stabilser, stabliser, stabliszer, stablisar, stabeliser, stabilizor, voltage
+# NOTE: "voltage" removed - too generic, collides with "voltage protection/fluctuation" spec text
+# in unrelated AC/refrigerator descriptions
+Stabilizer, stabilizers, stablizer, stabelizer, stabilser, stabliser, stabliszer, stablisar, stabeliser, stabilizor
 
 single refrigerator => single door
 double refrigerator => double door

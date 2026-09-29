@@ -782,19 +782,24 @@
       <!-- CAPACITY GETS MASSIVE BOOST - for queries like "7 kg", "1.5 ton", "197 L" -->
       <!-- productSubCategory ^100 for EXACT word matches (washer => Washer Dryer Refresher) -->
       <!-- productSubCategory_search ^25 for partial/autocomplete (wash => washer, ref => refresher) -->
-      <str name="qf">productCapacity^100 productSubCategory^100 title^15 name^12 productCategory^10 productFeature^8 sku^6 productSubCategory_search^1 pageContent^1 productDescription^1 productCategory_search^1</str>
+      <!-- NOTE: productCategory is a case-sensitive string field and never matches lowercase user queries; -->
+      <!-- productCategory_search (its analyzed copy) is the field that actually works, so it carries the real boost -->
+      <str name="qf">productCapacity^100 productSubCategory^100 productCategory_search^50 title^15 name^5 productCategory^10 productFeature^8 productSmallFeature^6 sku^6 productSubCategory_search^25 pageContent^1 productDescription^1</str>
       
       <!-- Phrase field boosting - capacity and exact subcategory phrases get HIGHEST priority -->
-      <str name="pf">productCapacity^200 productSubCategory^180 title^30 name^25 productCategory^20 productFeature^15 productSubCategory_search^1 productCategory_search^1</str>
+      <str name="pf">productCapacity^200 productSubCategory^180 productCategory_search^80 title^30 name^10 productCategory^20 productFeature^15 productSmallFeature^10 productSubCategory_search^40</str>
       <str name="ps">0</str>
       
       <!-- Content type boosting - Products > Blog/Support/Pages -->
+      <str name="bq">contentType:Product^50</str>
+      
+      <!-- Within Product content, favor core appliances over Accessories/Essentials (descalers, stands, wifi modules) -->
       <str name="bq">productType:Products^50</str>
       
       <!-- MULTIPLICATIVE BOOST using boost function -->
       <!-- This multiplies scores instead of adding, so high-relevance accessories can still win -->
-      <!-- Main products get 2x multiplier, accessories get 1x (no boost) -->
-      <str name="boost">if(termfreq(productType,'Products'),3,1)</str>
+      <!-- Products get up to 6x multiplier (3x contentType * 2x productType), Blog/Support/Page and Accessories/Essentials get less -->
+      <str name="boost">mul(if(termfreq(contentType,'Product'),3,1),if(termfreq(productType,'Products'),2,1))</str>
       
       <!-- Accessories and Essentials rank based on query relevance -->
       
@@ -995,8 +1000,8 @@
       <str name="lookupImpl">AnalyzingInfixLookupFactory</str>
       <str name="dictionaryImpl">DocumentDictionaryFactory</str>
       <str name="field">name</str>
-      <str name="weightField">name</str>
-      <str name="suggestAnalyzerFieldType">text_general</str>
+      <str name="contextField">contentType</str>
+      <str name="suggestAnalyzerFieldType">suggest_text</str>
       <str name="buildOnStartup">false</str>
       <str name="buildOnCommit">true</str>
     </lst>
@@ -1005,8 +1010,8 @@
       <str name="lookupImpl">AnalyzingInfixLookupFactory</str>
       <str name="dictionaryImpl">DocumentDictionaryFactory</str>
       <str name="field">title</str>
-      <str name="weightField">title</str>
-      <str name="suggestAnalyzerFieldType">text_general</str>
+      <str name="contextField">contentType</str>
+      <str name="suggestAnalyzerFieldType">suggest_text</str>
       <str name="buildOnStartup">false</str>
       <str name="buildOnCommit">true</str>
     </lst>
@@ -1015,8 +1020,18 @@
       <str name="lookupImpl">FuzzyLookupFactory</str>
       <str name="dictionaryImpl">DocumentDictionaryFactory</str>
       <str name="field">productCategory</str>
-      <str name="weightField">productCategory</str>
-      <str name="suggestAnalyzerFieldType">string</str>
+      <!-- FuzzyLookupFactory (AnalyzingSuggester) does not support contextField -->
+      <str name="suggestAnalyzerFieldType">lowercase</str>
+      <str name="buildOnStartup">false</str>
+      <str name="buildOnCommit">true</str>
+    </lst>
+    <lst name="suggester">
+      <str name="name">subCategorySuggester</str>
+      <str name="lookupImpl">AnalyzingInfixLookupFactory</str>
+      <str name="dictionaryImpl">DocumentDictionaryFactory</str>
+      <str name="field">productSubCategory</str>
+      <str name="contextField">contentType</str>
+      <str name="suggestAnalyzerFieldType">suggest_text</str>
       <str name="buildOnStartup">false</str>
       <str name="buildOnCommit">true</str>
     </lst>
@@ -1031,7 +1046,8 @@
       <str name="suggest.dictionary">titleSuggester</str>
       <str name="suggest.dictionary">categorySuggester</str>
       <str name="suggest.onlyMorePopular">true</str>
-      <str name="suggest.cfq">contentType:Product</str>
+      <!-- suggest.cfq must be the raw contextField value (e.g. "Product"), not a field:value query -->
+      <str name="suggest.cfq">Product</str>
     </lst>
     <arr name="components">
       <str>suggest</str>
